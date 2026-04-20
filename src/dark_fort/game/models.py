@@ -60,6 +60,23 @@ class Player(BaseModel):
         return v
 
 
+def weapon_to_item(weapon: Weapon) -> Item:
+    return Item(
+        name=weapon.name,
+        type=ItemType.WEAPON,
+        damage=weapon.damage,
+        attack_bonus=weapon.attack_bonus,
+    )
+
+
+def armor_to_item(armor: Armor) -> Item:
+    return Item(
+        name=armor.name,
+        type=ItemType.ARMOR,
+        absorb=armor.absorb,
+    )
+
+
 class Room(BaseModel):
     id: int
     shape: str

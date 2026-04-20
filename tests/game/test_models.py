@@ -12,6 +12,8 @@ from dark_fort.game.models import (
     Player,
     Room,
     Weapon,
+    armor_to_item,
+    weapon_to_item,
 )
 
 
@@ -168,3 +170,26 @@ class TestItemAbsorb:
     def test_item_absorb_defaults_none(self):
         item = Item(name="Potion", type=ItemType.POTION)
         assert item.absorb is None
+
+
+class TestConversionHelpers:
+    def test_weapon_to_item(self):
+        weapon = Weapon(name="Sword", damage="d6", attack_bonus=1)
+        item = weapon_to_item(weapon)
+        assert item.name == "Sword"
+        assert item.type == ItemType.WEAPON
+        assert item.damage == "d6"
+        assert item.attack_bonus == 1
+
+    def test_armor_to_item(self):
+        armor = Armor(name="Armor", absorb="d4")
+        item = armor_to_item(armor)
+        assert item.name == "Armor"
+        assert item.type == ItemType.ARMOR
+        assert item.absorb == "d4"
+
+    def test_weapon_to_item_preserves_all_fields(self):
+        weapon = Weapon(name="Flail", damage="d6+1")
+        item = weapon_to_item(weapon)
+        assert item.attack_bonus == 0
+        assert item.damage == "d6+1"

@@ -28,6 +28,10 @@ target-version = "py313"
 select = ["E", "F", "I", "W", "UP", "B", "SIM"]
 ignore = ["E501"]
 
+[tool.pyright]
+extraPaths = ["src"]
+pythonVersion = "3.13"
+
 [tool.ty.environment]
 python-version = "3.13"
 

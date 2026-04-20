@@ -165,7 +165,9 @@ class ShopScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
         yield Static("The Void Peddler", classes="title-header")
-        yield LogView(id="shop-log")
+        log = LogView(id="shop-log")
+        log.can_focus = False
+        yield log
         yield CommandBar(id="commands", commands=[Command.LEAVE])
 
     def on_mount(self) -> None:
@@ -186,7 +188,8 @@ class ShopScreen(Screen):
                 stats = f" (heal {item.damage})"
             log.add_message(f"  {i + 1}. {item.name}{stats} — {price}s")
         log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
-        log.add_message("Press a number (1-10) to buy, or L to leave.")
+        log.add_message("Press 1-9, 0 for item 10, or L to leave.")
+        self.focus()
 
     def action_leave(self) -> None:
         result = self.engine.leave_shop()

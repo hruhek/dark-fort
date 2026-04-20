@@ -102,11 +102,16 @@ class TestGameScreenActions:
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
+            initial_rooms = dict(pilot.app.engine.state.rooms)  # ty: ignore[unresolved-attribute]
             explore_button = pilot.app.screen.query_one("#cmd-explore")
             await pilot.click(explore_button)
             await pilot.pause()
-            log = pilot.app.screen.query_one("#log")
-            assert log.message_count > 2  # ty: ignore[unresolved-attribute]
+            # Room event may trigger shop (pushes ShopScreen) or combat (stays on GameScreen)
+            if pilot.app.screen.__class__.__name__ == "ShopScreen":
+                await pilot.press("l")
+                await pilot.pause()
+            # Verify a new room was added
+            assert len(pilot.app.engine.state.rooms) > len(initial_rooms)  # ty: ignore[unresolved-attribute]
 
     async def test_inventory_button_shows_empty_message(self):
         async with DarkFortApp().run_test() as pilot:

@@ -1,6 +1,7 @@
 from dark_fort.game.enums import Command, ItemType, MonsterTier, Phase
 from dark_fort.game.models import CombatState, Item, Monster
 from dark_fort.tui.app import DarkFortApp
+from dark_fort.tui.screens import ShopScreen
 from dark_fort.tui.widgets import CommandBar
 
 
@@ -142,3 +143,80 @@ class TestGameScreenActions:
             await pilot.click(leave_button)
             await pilot.pause()
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
+
+
+class TestShopScreen:
+    async def test_shop_displays_items_on_mount(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "ShopScreen"
+            shop_log = pilot.app.screen.query_one("#shop-log")
+            assert shop_log.message_count > 0  # ty: ignore[unresolved-attribute]
+
+    async def test_buy_item_deducts_silver(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.silver = 20  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("1")
+            await pilot.pause()
+            assert pilot.app.engine.state.player.silver == 16  # ty: ignore[unresolved-attribute]
+
+    async def test_leave_shop_returns_to_game_screen(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("l")
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "GameScreen"
+            assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
+
+
+class TestGameOverScreen:
+    async def test_death_screen_shows_fallen_message(self):
+        from dark_fort.tui.screens import GameOverScreen
+
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.hp = 0  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "GameOverScreen"
+            assert pilot.app.screen.victory is False  # ty: ignore[unresolved-attribute]
+
+    async def test_victory_screen_shows_victory_message(self):
+        from dark_fort.tui.screens import GameOverScreen
+
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.level_benefits = [1, 2, 3, 4, 5, 6]  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine, victory=True))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "GameOverScreen"
+            assert pilot.app.screen.victory is True  # ty: ignore[unresolved-attribute]
+
+    async def test_restart_resets_engine(self):
+        from dark_fort.tui.screens import GameOverScreen
+
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.hp = 0  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "TitleScreen"
+            assert pilot.app.engine.state.phase == Phase.TITLE  # ty: ignore[unresolved-attribute]

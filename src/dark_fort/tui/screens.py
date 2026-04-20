@@ -205,7 +205,8 @@ class ShopScreen(Screen):
 
     def on_key(self, event) -> None:
         if event.character and event.character.isdigit():
-            index = int(event.character) - 1
+            digit = int(event.character)
+            index = digit - 1 if digit != 0 else 9
             if index < 0 or index >= len(SHOP_ITEMS):
                 return
             result = self.engine.buy_item(index)

@@ -186,6 +186,19 @@ class TestShopScreen:
             assert pilot.app.screen.__class__.__name__ == "GameScreen"
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
 
+    async def test_buy_item_10_with_zero_key(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.silver = 20  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("0")
+            await pilot.pause()
+            assert pilot.app.engine.state.player.silver == 5  # ty: ignore[unresolved-attribute]  # 20 - 15 (Cloak price)
+            assert pilot.app.engine.state.player.cloak_charges > 0
+
 
 class TestGameOverScreen:
     async def test_death_screen_shows_fallen_message(self):

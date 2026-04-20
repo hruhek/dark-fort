@@ -6,8 +6,6 @@ A terminal TUI adaptation of the DARK FORT solo dungeon-crawler game.
 
 ```bash
 uv run dark-fort
-# or
-uv run python -m dark_fort
 ```
 
 ## Development

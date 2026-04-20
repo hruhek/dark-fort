@@ -13,11 +13,17 @@ class Weapon(BaseModel):
     attack_bonus: int = 0
 
 
+class Armor(BaseModel):
+    name: str
+    absorb: str = "d4"
+
+
 class Item(BaseModel):
     name: str
     type: ItemType
     damage: str | None = None
     attack_bonus: int = 0
+    absorb: str | None = None
     uses: int | None = None
 
 

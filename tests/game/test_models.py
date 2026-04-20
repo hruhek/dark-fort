@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from dark_fort.game.enums import ItemType, MonsterTier, Phase
 from dark_fort.game.models import (
     ActionResult,
+    Armor,
     CombatState,
     GameState,
     Item,
@@ -133,3 +134,24 @@ class TestActionResult:
 
         result = ActionResult(messages=[], choices=[Command.ATTACK, Command.FLEE])
         assert len(result.choices) == 2
+
+
+class TestArmor:
+    def test_create_armor(self):
+        armor = Armor(name="Armor", absorb="d4")
+        assert armor.name == "Armor"
+        assert armor.absorb == "d4"
+
+    def test_armor_default_absorb(self):
+        armor = Armor(name="Armor")
+        assert armor.absorb == "d4"
+
+
+class TestItemAbsorb:
+    def test_create_armor_item_with_absorb(self):
+        item = Item(name="Armor", type=ItemType.ARMOR, absorb="d4")
+        assert item.absorb == "d4"
+
+    def test_item_absorb_defaults_none(self):
+        item = Item(name="Potion", type=ItemType.POTION)
+        assert item.absorb is None

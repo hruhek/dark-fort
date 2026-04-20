@@ -168,3 +168,36 @@ class TestBuyArmor:
         engine.buy_item(8)  # Armor is index 8
         assert engine.state.player.armor.name == "Armor"
         assert any(item.name == "Old Armor" for item in engine.state.player.inventory)
+
+
+class TestEquipSwapIntegration:
+    def test_full_weapon_swap_flow(self):
+        engine = GameEngine()
+        engine.start_game()
+        old_weapon_name = engine.state.player.weapon.name
+        engine.state.player.inventory.append(
+            Item(name="Flail", type=ItemType.WEAPON, damage="d6+1")
+        )
+        engine.use_item(0)
+        assert engine.state.player.weapon.name == "Flail"
+        assert any(item.name == old_weapon_name for item in engine.state.player.inventory)
+
+    def test_full_armor_swap_flow(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.armor = Armor(name="Armor", absorb="d4")
+        engine.state.player.inventory.append(
+            Item(name="Chain Mail", type=ItemType.ARMOR, absorb="d6")
+        )
+        engine.use_item(0)
+        assert engine.state.player.armor.name == "Chain Mail"
+        assert any(item.name == "Armor" for item in engine.state.player.inventory)
+
+    def test_buy_armor_then_equip_another(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.silver = 30
+        engine.state.phase = Phase.SHOP
+        engine.buy_item(8)  # Buy Armor
+        assert engine.state.player.armor is not None
+        assert engine.state.player.armor.name == "Armor"

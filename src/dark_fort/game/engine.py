@@ -147,8 +147,17 @@ class GameEngine:
         self.state.player.silver -= price
 
         if item.type == "armor":
-            self.state.player.armor = Armor(name=item.name, absorb=item.absorb or "d4")
-            msg = f"You buy {item.name} for {price}s."
+            if self.state.player.armor is not None:
+                self.state.player.inventory.append(
+                    armor_to_item(self.state.player.armor)
+                )
+                msg = f"You buy {item.name} for {price}s. {self.state.player.armor.name} moved to inventory."
+            else:
+                msg = f"You buy {item.name} for {price}s."
+            self.state.player.armor = Armor(
+                name=item.name,
+                absorb=item.absorb or "d4",
+            )
         elif item.type == "cloak":
             self.state.player.cloak_charges = roll("d4")
             msg = f"You buy {item.name} for {price}s ({self.state.player.cloak_charges} charges)."

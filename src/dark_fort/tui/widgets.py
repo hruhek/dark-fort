@@ -85,6 +85,8 @@ class CommandBar(Horizontal):
             yield button
 
     def watch_commands(self) -> None:
+        if not self.is_mounted:
+            return
         self.remove_children()
         for cmd in self.commands:
             button = Button(cmd.value.replace("_", " ").title(), id=f"cmd-{cmd.value}")

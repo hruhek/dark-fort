@@ -248,6 +248,7 @@ def resolve_room_event(
 
     elif room_result == "Weak monster":
         monster = get_weak_monster(roll("d4") - 1)
+        state.combat = CombatState(monster=monster, monster_hp=monster.hp)
         messages.append(f"A {monster.name} stands guard! Attack!")
         phase = Phase.COMBAT
 
@@ -255,6 +256,7 @@ def resolve_room_event(
         from dark_fort.game.tables import get_tough_monster
 
         monster = get_tough_monster(roll("d4") - 1)
+        state.combat = CombatState(monster=monster, monster_hp=monster.hp)
         messages.append(f"A {monster.name} blocks your path! Attack!")
         phase = Phase.COMBAT
 

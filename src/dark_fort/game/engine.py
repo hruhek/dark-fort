@@ -10,7 +10,6 @@ from dark_fort.game.models import (
     Potion,
     Room,
     Scroll,
-    Weapon,
 )
 from dark_fort.game.rules import (
     apply_level_benefit,

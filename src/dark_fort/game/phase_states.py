@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from dark_fort.game.enums import Command, ItemType, Phase
 from dark_fort.game.models import ActionResult
+from dark_fort.game.tables import SHOP_ITEMS
 
 if TYPE_CHECKING:
     from dark_fort.game.engine import GameEngine
@@ -25,11 +26,11 @@ class PhaseState(ABC):
     ) -> ActionResult | None: ...
 
 
-class ExploringState(PhaseState):
+class ExploringPhaseState(PhaseState):
     phase = Phase.EXPLORING
     available_commands = [Command.EXPLORE, Command.INVENTORY]
 
-    def handle_command(self, engine, action):
+    def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
         if action == "explore":
             return engine.enter_new_room()
         if action == "inventory":
@@ -54,11 +55,11 @@ class ExploringState(PhaseState):
         return None
 
 
-class CombatState(PhaseState):
+class CombatPhaseState(PhaseState):
     phase = Phase.COMBAT
     available_commands = [Command.ATTACK, Command.FLEE, Command.USE_ITEM]
 
-    def handle_command(self, engine, action):
+    def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
         if action == "attack":
             return engine.attack()
         if action == "flee":
@@ -68,16 +69,14 @@ class CombatState(PhaseState):
         return None
 
 
-class ShopState(PhaseState):
+class ShopPhaseState(PhaseState):
     phase = Phase.SHOP
     available_commands = [Command.BROWSE, Command.LEAVE]
 
-    def handle_command(self, engine, action):
+    def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
         if action == "leave":
             return engine.leave_shop()
         if action == "browse":
-            from dark_fort.game.tables import SHOP_ITEMS
-
             messages = ["Available wares:"]
             for i, (item, price) in enumerate(SHOP_ITEMS):
                 stats = item.display_stats()
@@ -90,7 +89,7 @@ class ShopState(PhaseState):
 
 
 PHASE_STATES: dict[Phase, PhaseState] = {
-    Phase.EXPLORING: ExploringState(),
-    Phase.COMBAT: CombatState(),
-    Phase.SHOP: ShopState(),
+    Phase.EXPLORING: ExploringPhaseState(),
+    Phase.COMBAT: CombatPhaseState(),
+    Phase.SHOP: ShopPhaseState(),
 }

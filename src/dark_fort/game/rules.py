@@ -1,5 +1,5 @@
 from dark_fort.game.dice import chance_in_6, roll
-from dark_fort.game.enums import Phase, RoomEvent, ScrollType
+from dark_fort.game.enums import MonsterSpecial, Phase, RoomEvent, ScrollType
 from dark_fort.game.models import (
     ActionResult,
     Armor,
@@ -79,7 +79,7 @@ def resolve_combat_hit(
             combat.monster_hp = 0
             _resolve_loot(monster, player, messages)
 
-            if monster.special == "7_points_on_kill":
+            if monster.special == MonsterSpecial.SEVEN_POINTS_ON_KILL:
                 messages.append("The troll crumbles to dust — 7 points earned!")
                 player.points = max(0, player.points - monster.points) + 7
     else:
@@ -119,25 +119,25 @@ def resolve_combat_hit(
 
 def _resolve_loot(monster: Monster, player: Player, messages: list[str]) -> None:
     """Handle monster loot drops."""
-    if monster.special == "loot_dagger_2_in_6" and chance_in_6(2):
+    if monster.special == MonsterSpecial.LOOT_DAGGER and chance_in_6(2):
         player.inventory.append(Weapon(name="Dagger", damage="d4", attack_bonus=1))
         messages.append("Loot: Dagger")
-    elif monster.special == "loot_scroll_2_in_6" and chance_in_6(2):
+    elif monster.special == MonsterSpecial.LOOT_SCROLL and chance_in_6(2):
         scroll_name, scroll_type, _ = SCROLLS_TABLE[roll("d4") - 1]
         player.inventory.append(Scroll(name=scroll_name, scroll_type=scroll_type))
         messages.append("Loot: Random scroll")
-    elif monster.special == "loot_rope_2_in_6" and chance_in_6(2):
+    elif monster.special == MonsterSpecial.LOOT_ROPE and chance_in_6(2):
         player.inventory.append(Rope(name="Rope"))
         messages.append("Loot: Rope")
 
 
 def resolve_monster_special(monster: Monster, special_roll: int) -> str | None:
     """Check if a monster's special ability triggers. Returns message or None."""
-    if monster.special == "death_ray_1_in_6" and special_roll == 1:
+    if monster.special == MonsterSpecial.DEATH_RAY and special_roll == 1:
         return "The Necro-Sorcerer's death ray strikes! You are transformed into a maggot. GAME OVER."
-    if monster.special == "petrify_1_in_6" and special_roll == 1:
+    if monster.special == MonsterSpecial.PETRIFY and special_roll == 1:
         return "Medusa's gaze petrifies you! GAME OVER."
-    if monster.special == "instant_level_up_2_in_6" and special_roll <= 2:
+    if monster.special == MonsterSpecial.INSTANT_LEVEL_UP and special_roll <= 2:
         return "The Basilisk's power surges through you! Instant level up!"
     return None
 

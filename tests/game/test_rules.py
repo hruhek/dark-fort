@@ -1,4 +1,4 @@
-from dark_fort.game.enums import MonsterTier, Phase
+from dark_fort.game.enums import MonsterSpecial, MonsterTier, Phase
 from dark_fort.game.models import (
     Armor,
     CombatState,
@@ -146,7 +146,7 @@ class TestMonsterSpecial:
             points=4,
             damage="d4",
             hp=8,
-            special="death_ray_1_in_6",
+            special=MonsterSpecial.DEATH_RAY,
         )
         result = resolve_monster_special(monster, special_roll=1)
         assert result is not None

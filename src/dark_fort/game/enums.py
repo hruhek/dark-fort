@@ -51,3 +51,13 @@ class RoomEvent(StrEnum):
     WEAK_MONSTER = auto()
     TOUGH_MONSTER = auto()
     SHOP = auto()
+
+
+class MonsterSpecial(StrEnum):
+    LOOT_DAGGER = auto()
+    LOOT_SCROLL = auto()
+    LOOT_ROPE = auto()
+    DEATH_RAY = auto()
+    PETRIFY = auto()
+    INSTANT_LEVEL_UP = auto()
+    SEVEN_POINTS_ON_KILL = auto()

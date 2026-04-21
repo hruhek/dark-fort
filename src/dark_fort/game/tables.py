@@ -1,4 +1,4 @@
-from dark_fort.game.enums import MonsterTier, RoomEvent, ScrollType
+from dark_fort.game.enums import MonsterSpecial, MonsterTier, RoomEvent, ScrollType
 from dark_fort.game.models import (
     AnyItem,
     Armor,
@@ -22,7 +22,7 @@ WEAK_MONSTERS: list[Monster] = [
         damage="d4",
         hp=6,
         loot="Dagger",
-        special="loot_dagger_2_in_6",
+        special=MonsterSpecial.LOOT_DAGGER,
     ),
     Monster(
         name="Catacomb Cultist",
@@ -31,7 +31,7 @@ WEAK_MONSTERS: list[Monster] = [
         damage="d4",
         hp=6,
         loot="Random scroll",
-        special="loot_scroll_2_in_6",
+        special=MonsterSpecial.LOOT_SCROLL,
     ),
     Monster(
         name="Goblin",
@@ -40,7 +40,7 @@ WEAK_MONSTERS: list[Monster] = [
         damage="d4",
         hp=5,
         loot="Rope",
-        special="loot_rope_2_in_6",
+        special=MonsterSpecial.LOOT_ROPE,
     ),
     Monster(
         name="Undead Hound",
@@ -59,7 +59,7 @@ TOUGH_MONSTERS: list[Monster] = [
         damage="d4",
         hp=8,
         loot="3d6 silver",
-        special="death_ray_1_in_6",
+        special=MonsterSpecial.DEATH_RAY,
     ),
     Monster(
         name="Small Stone Troll",
@@ -67,7 +67,7 @@ TOUGH_MONSTERS: list[Monster] = [
         points=5,
         damage="d6+1",
         hp=9,
-        special="7_points_on_kill",
+        special=MonsterSpecial.SEVEN_POINTS_ON_KILL,
     ),
     Monster(
         name="Medusa",
@@ -76,7 +76,7 @@ TOUGH_MONSTERS: list[Monster] = [
         damage="d6",
         hp=10,
         loot="d4×d6 silver",
-        special="petrify_1_in_6",
+        special=MonsterSpecial.PETRIFY,
     ),
     Monster(
         name="Ruin Basilisk",
@@ -84,7 +84,7 @@ TOUGH_MONSTERS: list[Monster] = [
         points=4,
         damage="d6",
         hp=11,
-        special="instant_level_up_2_in_6",
+        special=MonsterSpecial.INSTANT_LEVEL_UP,
     ),
 ]
 

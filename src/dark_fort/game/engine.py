@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dark_fort.game.dice import roll
-from dark_fort.game.enums import Phase
+from dark_fort.game.enums import ItemType, Phase
 from dark_fort.game.models import (
     ActionResult,
     Armor,
@@ -48,12 +48,15 @@ class GameEngine:
         self.state.player.weapon = weapon
         self.state.player.silver = roll("d6") + 15
 
-        if item.type == "armor":
-            self.state.player.armor = Armor(name=item.name, absorb=item.absorb or "d4")
-        elif item.type == "potion" or item.type == "scroll":
-            self.state.player.inventory.append(item)
-        elif item.type == "cloak":
-            self.state.player.cloak_charges = roll("d4")
+        match item.type:
+            case ItemType.ARMOR:
+                self.state.player.armor = Armor(
+                    name=item.name, absorb=item.absorb or "d4"
+                )
+            case ItemType.POTION | ItemType.SCROLL:
+                self.state.player.inventory.append(item)
+            case ItemType.CLOAK:
+                self.state.player.cloak_charges = roll("d4")
 
         entrance = self._generate_room(is_entrance=True)
         self.state.current_room = entrance

@@ -5,7 +5,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Header, Static
 
 from dark_fort.game.engine import GameEngine
-from dark_fort.game.enums import Command
+from dark_fort.game.enums import Command, ItemType, Phase
 from dark_fort.game.models import ActionResult
 from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
@@ -65,11 +65,11 @@ class GameScreen(Screen):
         phase = self.engine.state.phase
         commands: list[Command] = []
 
-        if phase == "combat":
+        if phase == Phase.COMBAT:
             commands = [Command.ATTACK, Command.FLEE, Command.USE_ITEM]
-        elif phase == "exploring":
+        elif phase == Phase.EXPLORING:
             commands = [Command.EXPLORE, Command.INVENTORY]
-        elif phase == "shop":
+        elif phase == Phase.SHOP:
             commands = [Command.BROWSE, Command.LEAVE]
 
         cmd_bar = self.query_one("#commands", CommandBar)
@@ -118,22 +118,22 @@ class GameScreen(Screen):
             return ActionResult(messages=["Your inventory is empty."])
 
         type_prefix = {
-            "weapon": "W",
-            "armor": "A",
-            "potion": "P",
-            "scroll": "S",
-            "rope": "R",
-            "cloak": "C",
+            ItemType.WEAPON: "W",
+            ItemType.ARMOR: "A",
+            ItemType.POTION: "P",
+            ItemType.SCROLL: "S",
+            ItemType.ROPE: "R",
+            ItemType.CLOAK: "C",
         }
         messages = ["Inventory:"]
         for i, item in enumerate(player.inventory):
             prefix = type_prefix.get(item.type, "?")
             stats = ""
-            if item.type == "weapon" and item.damage:
+            if item.type == ItemType.WEAPON and item.damage:
                 stats = f" ({item.damage})"
-            elif item.type == "armor" and item.absorb:
+            elif item.type == ItemType.ARMOR and item.absorb:
                 stats = f" ({item.absorb})"
-            elif item.type == "potion" and item.damage:
+            elif item.type == ItemType.POTION and item.damage:
                 stats = f" (heal {item.damage})"
             messages.append(f"  {i + 1}. [{prefix}] {item.name}{stats}")
         return ActionResult(messages=messages)
@@ -142,13 +142,13 @@ class GameScreen(Screen):
         return ActionResult(messages=["Use item: (type item number)"])
 
     def _handle_phase_change(self, result: ActionResult) -> None:
-        if result.phase == "game_over":
+        if result.phase == Phase.GAME_OVER:
             self.dismiss()
             self.app.push_screen(GameOverScreen(engine=self.engine))
-        elif result.phase == "victory":
+        elif result.phase == Phase.VICTORY:
             self.dismiss()
             self.app.push_screen(GameOverScreen(engine=self.engine, victory=True))
-        elif result.phase == "shop":
+        elif result.phase == Phase.SHOP:
             self.dismiss()
             self.app.push_screen(ShopScreen(engine=self.engine))
 
@@ -177,14 +177,14 @@ class ShopScreen(Screen):
         log.add_message("Available wares:")
         for i, (item, price) in enumerate(SHOP_ITEMS):
             stats = ""
-            if item.type == "weapon" and item.damage:
+            if item.type == ItemType.WEAPON and item.damage:
                 stats = f" ({item.damage}"
                 if item.attack_bonus:
                     stats += f"/+{item.attack_bonus}"
                 stats += ")"
-            elif item.type == "armor" and item.absorb:
+            elif item.type == ItemType.ARMOR and item.absorb:
                 stats = f" (-{item.absorb})"
-            elif item.type == "potion" and item.damage:
+            elif item.type == ItemType.POTION and item.damage:
                 stats = f" (heal {item.damage})"
             log.add_message(f"  {i + 1}. {item.name}{stats} — {price}s")
         log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")

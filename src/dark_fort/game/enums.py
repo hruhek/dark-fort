@@ -61,3 +61,19 @@ class MonsterSpecial(StrEnum):
     PETRIFY = auto()
     INSTANT_LEVEL_UP = auto()
     SEVEN_POINTS_ON_KILL = auto()
+
+
+class ActionKind(StrEnum):
+    INVENTORY = auto()
+    COMBAT = auto()
+    SHOP = auto()
+    ROOM = auto()
+    NAVIGATION = auto()
+    LEVEL_UP = auto()
+
+
+class EquipSlot(StrEnum):
+    WEAPON = auto()
+    ARMOR = auto()
+    NONE = auto()
+    SPECIAL = auto()

@@ -9,6 +9,7 @@ from dark_fort.game.models import (
     Monster,
     Player,
     Potion,
+    RoomEventResult,
     Rope,
     Scroll,
     Weapon,
@@ -208,63 +209,109 @@ def resolve_pit_trap(player: Player, dice_roll: int | None = None) -> ActionResu
 
 
 def resolve_room_event(
-    state: GameState, room_result: RoomEvent, dice_roll: int | None = None
-) -> ActionResult:
-    """Resolve a room table result."""
-    messages: list[str] = []
-    phase = None
-
+    room_result: RoomEvent, player: Player, dice_roll: int | None = None
+) -> RoomEventResult:
+    """Resolve a room table result. Pure function — returns deltas, doesn't mutate."""
     if room_result == RoomEvent.EMPTY:
-        messages.append("The room is empty. You mark it as explored.")
-        if state.current_room:
-            state.current_room.explored = True
+        return RoomEventResult(
+            messages=["The room is empty. You mark it as explored."],
+            explored=True,
+        )
 
-    elif room_result == RoomEvent.PIT_TRAP:
-        pit_result = resolve_pit_trap(state.player, dice_roll)
-        messages.extend(pit_result.messages)
-        if pit_result.phase:
-            phase = pit_result.phase
-        if state.current_room and not phase:
-            state.current_room.explored = True
+    if room_result == RoomEvent.PIT_TRAP:
+        return _resolve_pit_trap_result(player, dice_roll)
 
-    elif room_result == RoomEvent.SOOTHSAYER:
-        if dice_roll is None:
-            dice_roll = roll("d6")
-        if dice_roll % 2 == 1:
-            messages.append("The Soothsayer rewards you! Gain 10 silver or 3 points.")
-            state.player.silver += 10
-            messages.append("You gain 10 silver.")
-        else:
-            damage = roll("d4")
-            state.player.hp -= damage
-            messages.append(
-                f"The Soothsayer curses you! Take {damage} damage (ignores armor)."
-            )
-            if state.player.hp <= 0:
-                messages.append("You have fallen!")
-                phase = Phase.GAME_OVER
-        if state.current_room and not phase:
-            state.current_room.explored = True
+    if room_result == RoomEvent.SOOTHSAYER:
+        return _resolve_soothsayer_result(player, dice_roll)
 
-    elif room_result == RoomEvent.WEAK_MONSTER:
+    if room_result == RoomEvent.WEAK_MONSTER:
         monster = get_weak_monster(roll("d4") - 1)
-        state.combat = CombatState(monster=monster, monster_hp=monster.hp)
-        messages.append(f"A {monster.name} stands guard! Attack!")
-        phase = Phase.COMBAT
+        return RoomEventResult(
+            messages=[f"A {monster.name} stands guard! Attack!"],
+            phase=Phase.COMBAT,
+            combat=CombatState(monster=monster, monster_hp=monster.hp),
+        )
 
-    elif room_result == RoomEvent.TOUGH_MONSTER:
+    if room_result == RoomEvent.TOUGH_MONSTER:
         from dark_fort.game.tables import get_tough_monster
 
         monster = get_tough_monster(roll("d4") - 1)
-        state.combat = CombatState(monster=monster, monster_hp=monster.hp)
-        messages.append(f"A {monster.name} blocks your path! Attack!")
-        phase = Phase.COMBAT
+        return RoomEventResult(
+            messages=[f"A {monster.name} blocks your path! Attack!"],
+            phase=Phase.COMBAT,
+            combat=CombatState(monster=monster, monster_hp=monster.hp),
+        )
 
-    elif room_result == RoomEvent.SHOP:
-        messages.append("You encounter the Void Peddler. Wares are displayed.")
-        phase = Phase.SHOP
+    if room_result == RoomEvent.SHOP:
+        return RoomEventResult(
+            messages=["You encounter the Void Peddler. Wares are displayed."],
+            phase=Phase.SHOP,
+        )
 
-    return ActionResult(messages=messages, phase=phase)
+    return RoomEventResult(messages=["Unknown room event."])
+
+
+def _resolve_pit_trap_result(
+    player: Player, dice_roll: int | None = None
+) -> RoomEventResult:
+    if dice_roll is None:
+        dice_roll = roll("d6")
+
+    rope_bonus = 1 if has_rope(player) else 0
+    effective_roll = dice_roll + rope_bonus
+
+    messages = [
+        f"Pit trap! You rolled {dice_roll}"
+        + (f" (+1 rope = {effective_roll})" if rope_bonus else "")
+    ]
+
+    if effective_roll <= 3:
+        damage = roll("d6")
+        if player.hp - damage <= 0:
+            messages.append(
+                f"You fall in and take {damage} damage (HP: {player.hp - damage}/{player.max_hp})"
+            )
+            messages.append("You have fallen!")
+            return RoomEventResult(
+                messages=messages, phase=Phase.GAME_OVER, hp_delta=-damage
+            )
+        messages.append(
+            f"You fall in and take {damage} damage (HP: {player.hp - damage}/{player.max_hp})"
+        )
+        return RoomEventResult(messages=messages, explored=True, hp_delta=-damage)
+    messages.append("You avoid the trap safely.")
+    return RoomEventResult(messages=messages, explored=True)
+
+
+def _resolve_soothsayer_result(
+    player: Player, dice_roll: int | None = None
+) -> RoomEventResult:
+    if dice_roll is None:
+        dice_roll = roll("d6")
+    if dice_roll % 2 == 1:
+        return RoomEventResult(
+            messages=[
+                "The Soothsayer rewards you! Gain 10 silver or 3 points.",
+                "You gain 10 silver.",
+            ],
+            explored=True,
+            silver_delta=10,
+        )
+    damage = roll("d4")
+    if player.hp - damage <= 0:
+        return RoomEventResult(
+            messages=[
+                f"The Soothsayer curses you! Take {damage} damage (ignores armor).",
+                "You have fallen!",
+            ],
+            phase=Phase.GAME_OVER,
+            hp_delta=-damage,
+        )
+    return RoomEventResult(
+        messages=[f"The Soothsayer curses you! Take {damage} damage (ignores armor)."],
+        explored=True,
+        hp_delta=-damage,
+    )
 
 
 def has_rope(player: Player) -> bool:

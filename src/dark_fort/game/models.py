@@ -208,3 +208,12 @@ class GameState(BaseModel):
 class ActionResult(BaseModel):
     messages: list[str]
     phase: Phase | None = None
+
+
+class RoomEventResult(BaseModel):
+    messages: list[str]
+    phase: Phase | None = None
+    combat: CombatState | None = None
+    explored: bool = False
+    silver_delta: int = 0
+    hp_delta: int = 0

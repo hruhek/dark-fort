@@ -93,8 +93,17 @@ class GameEngine:
         room_result_idx = roll("d6") - 1
         room_result = ROOM_RESULTS[room_result_idx]
 
-        result = resolve_room_event(self.state, room_result)
+        result = resolve_room_event(room_result, self.state.player)
         messages.extend(result.messages)
+
+        if result.combat:
+            self.state.combat = result.combat
+        if result.explored and self.state.current_room:
+            self.state.current_room.explored = True
+        if result.silver_delta:
+            self.state.player.silver += result.silver_delta
+        if result.hp_delta:
+            self.state.player.hp += result.hp_delta
 
         final_phase = result.phase or Phase.EXPLORING
         self.state.phase = final_phase

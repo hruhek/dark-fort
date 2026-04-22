@@ -201,6 +201,7 @@ class GameState(BaseModel):
     phase: Phase
     combat: CombatState | None = None
     level_up_queue: bool = False
+    shop_wares: list[ShopEntry] = Field(default_factory=list)
     log: list[str] = Field(default_factory=list)
 
 

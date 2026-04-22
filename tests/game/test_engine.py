@@ -1,6 +1,7 @@
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Phase
 from dark_fort.game.models import Armor, Weapon
+from dark_fort.game.tables import SHOP_ITEMS
 
 
 class TestGameEngine:
@@ -195,3 +196,19 @@ class TestEquipSwapIntegration:
         engine.buy_item(8)  # Buy Armor
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
+
+
+class TestShopWares:
+    def test_shop_wares_populated_on_shop_event(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.shop_wares = list(SHOP_ITEMS)
+        assert len(engine.state.shop_wares) > 0
+
+    def test_shop_wares_cleared_on_leave(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
+        engine.leave_shop()
+        assert engine.state.shop_wares == []

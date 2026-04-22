@@ -1,5 +1,6 @@
 from dark_fort.game.enums import MonsterTier, Phase
 from dark_fort.game.models import CombatState, Monster
+from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.screens import GameOverScreen, ShopScreen
 
@@ -69,6 +70,7 @@ class TestShopFlow:
             await pilot.pause()
             pilot.app.engine.state.player.silver = 20  # ty: ignore[unresolved-attribute]
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             await pilot.press("1")
@@ -84,6 +86,8 @@ class TestShopFlow:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.player.silver = 2  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             initial_silver = pilot.app.engine.state.player.silver  # ty: ignore[unresolved-attribute]

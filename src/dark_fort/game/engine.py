@@ -99,6 +99,9 @@ class GameEngine:
         final_phase = result.phase or Phase.EXPLORING
         self.state.phase = final_phase
 
+        if final_phase == Phase.SHOP:
+            self.state.shop_wares = list(SHOP_ITEMS)
+
         return ActionResult(messages=messages, phase=final_phase)
 
     def attack(self, player_roll: int | None = None) -> ActionResult:
@@ -188,6 +191,7 @@ class GameEngine:
     def leave_shop(self) -> ActionResult:
         """Leave the Void Peddler."""
         self.state.phase = Phase.EXPLORING
+        self.state.shop_wares = []
         if self.state.current_room:
             self.state.current_room.explored = True
         return ActionResult(

@@ -126,6 +126,7 @@ class TestGameState:
         assert state.rooms == {}
         assert state.combat is None
         assert state.level_up_queue is False
+        assert state.shop_wares == []
         assert state.log == []
 
 

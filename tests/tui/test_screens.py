@@ -1,5 +1,6 @@
 from dark_fort.game.enums import Command, MonsterTier, Phase
 from dark_fort.game.models import CombatState, Monster, Potion
+from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.screens import ShopScreen
 from dark_fort.tui.widgets import CommandBar
@@ -53,6 +54,7 @@ class TestGameScreenPhaseCommands:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
@@ -141,6 +143,7 @@ class TestGameScreenActions:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
@@ -156,6 +159,7 @@ class TestShopScreen:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             assert pilot.app.screen.__class__.__name__ == "ShopScreen"
@@ -168,6 +172,7 @@ class TestShopScreen:
             await pilot.pause()
             pilot.app.engine.state.player.silver = 20  # ty: ignore[unresolved-attribute]
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             await pilot.press("1")
@@ -179,6 +184,7 @@ class TestShopScreen:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             await pilot.press("l")
@@ -192,6 +198,7 @@ class TestShopScreen:
             await pilot.pause()
             pilot.app.engine.state.player.silver = 20  # ty: ignore[unresolved-attribute]
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
             pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             await pilot.press("0")

@@ -15,7 +15,8 @@ from dark_fort.game.enums import (
 )
 
 
-# TODO: what are benefits of Item being a BaseModel?
+# BaseModel enables: discriminated unions (AnyItem), model_dump/model_validate
+# for save/load serialization, and runtime validation on deserialization.
 class Item(BaseModel):
     name: str
 
@@ -126,6 +127,16 @@ AnyItem = Annotated[
     Weapon | Armor | Potion | Scroll | Rope | Cloak,
     Field(discriminator="type"),
 ]
+
+
+class ShopEntry(BaseModel):
+    item: AnyItem
+    price: int
+
+    def display_stats(self) -> str:
+        stats = self.item.display_stats()
+        stats_str = f" ({stats})" if stats else ""
+        return f"{self.item.name}{stats_str} — {self.price}s"
 
 
 class Monster(BaseModel):

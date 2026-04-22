@@ -1,12 +1,12 @@
 from dark_fort.game.enums import MonsterSpecial, MonsterTier, RoomEvent, ScrollType
 from dark_fort.game.models import (
-    AnyItem,
     Armor,
     Cloak,
     Monster,
     Potion,
     Rope,
     Scroll,
+    ShopEntry,
     Weapon,
 )
 
@@ -92,18 +92,19 @@ TOUGH_MONSTERS: list[Monster] = [
 # Shop table — (Item, price) pairs
 # ---------------------------------------------------------------------------
 
-# TODO: return shema new schema object ItemWithPrice
-SHOP_ITEMS: list[tuple[AnyItem, int]] = [
-    (Potion(name="Potion", heal="d6"), 4),
-    (Scroll(name="Random scroll", scroll_type=ScrollType.SUMMON_DAEMON), 7),
-    (Weapon(name="Dagger", damage="d4", attack_bonus=1), 6),
-    (Weapon(name="Warhammer", damage="d6"), 9),
-    (Rope(name="Rope"), 5),
-    (Weapon(name="Sword", damage="d6", attack_bonus=1), 12),
-    (Weapon(name="Flail", damage="d6+1"), 15),
-    (Weapon(name="Mighty Zweihänder", damage="d6+2"), 25),
-    (Armor(name="Armor", absorb="d4"), 10),
-    (Cloak(name="Cloak of invisibility"), 15),
+SHOP_ITEMS: list[ShopEntry] = [
+    ShopEntry(item=Potion(name="Potion", heal="d6"), price=4),
+    ShopEntry(
+        item=Scroll(name="Random scroll", scroll_type=ScrollType.SUMMON_DAEMON), price=7
+    ),
+    ShopEntry(item=Weapon(name="Dagger", damage="d4", attack_bonus=1), price=6),
+    ShopEntry(item=Weapon(name="Warhammer", damage="d6"), price=9),
+    ShopEntry(item=Rope(name="Rope"), price=5),
+    ShopEntry(item=Weapon(name="Sword", damage="d6", attack_bonus=1), price=12),
+    ShopEntry(item=Weapon(name="Flail", damage="d6+1"), price=15),
+    ShopEntry(item=Weapon(name="Mighty Zweihänder", damage="d6+2"), price=25),
+    ShopEntry(item=Armor(name="Armor", absorb="d4"), price=10),
+    ShopEntry(item=Cloak(name="Cloak of invisibility"), price=15),
 ]
 
 # ---------------------------------------------------------------------------
@@ -234,7 +235,7 @@ def get_tough_monster(index: int) -> Monster:
     return TOUGH_MONSTERS[index % len(TOUGH_MONSTERS)]
 
 
-def get_shop_item(index: int) -> tuple[AnyItem, int]:
+def get_shop_item(index: int) -> ShopEntry:
     return SHOP_ITEMS[index % len(SHOP_ITEMS)]
 
 

@@ -34,7 +34,7 @@ class TestExploringPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = ExploringPhaseState()
-        result = state.handle_command(engine, "explore")
+        result = state.handle_command(engine, Command.EXPLORE)
         assert result is not None
         assert result.messages
 
@@ -43,7 +43,7 @@ class TestExploringPhaseState:
         engine.start_game()
         engine.state.player.inventory = []
         state = ExploringPhaseState()
-        result = state.handle_command(engine, "inventory")
+        result = state.handle_command(engine, Command.INVENTORY)
         assert result is not None
         assert result.messages == ["Your inventory is empty."]
 
@@ -55,7 +55,7 @@ class TestExploringPhaseState:
             Scroll(name="Scroll", scroll_type=ScrollType.SUMMON_DAEMON),
         ]
         state = ExploringPhaseState()
-        result = state.handle_command(engine, "inventory")
+        result = state.handle_command(engine, Command.INVENTORY)
         assert result is not None
         assert result.messages[0] == "Inventory:"
         assert "Potion" in result.messages[1]
@@ -65,7 +65,7 @@ class TestExploringPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = ExploringPhaseState()
-        assert state.handle_command(engine, "unknown") is None
+        assert state.handle_command(engine, Command.MOVE) is None
 
 
 class TestCombatPhaseState:
@@ -85,7 +85,7 @@ class TestCombatPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = CombatPhaseState()
-        result = state.handle_command(engine, "attack")
+        result = state.handle_command(engine, Command.ATTACK)
         assert result is not None
         assert "No monster to attack" in result.messages[0]
 
@@ -93,7 +93,7 @@ class TestCombatPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = CombatPhaseState()
-        result = state.handle_command(engine, "flee")
+        result = state.handle_command(engine, Command.FLEE)
         assert result is not None
         assert "No monster to flee" in result.messages[0]
 
@@ -101,7 +101,7 @@ class TestCombatPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = CombatPhaseState()
-        result = state.handle_command(engine, "use_item")
+        result = state.handle_command(engine, Command.USE_ITEM)
         assert result is not None
         assert "Use item" in result.messages[0]
 
@@ -109,7 +109,7 @@ class TestCombatPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = CombatPhaseState()
-        assert state.handle_command(engine, "unknown") is None
+        assert state.handle_command(engine, Command.MOVE) is None
 
 
 class TestShopPhaseState:
@@ -126,7 +126,7 @@ class TestShopPhaseState:
         engine.start_game()
         engine.state.phase = Phase.SHOP
         state = ShopPhaseState()
-        result = state.handle_command(engine, "leave")
+        result = state.handle_command(engine, Command.LEAVE)
         assert result is not None
         assert result.phase == Phase.EXPLORING
 
@@ -134,7 +134,7 @@ class TestShopPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = ShopPhaseState()
-        result = state.handle_command(engine, "browse")
+        result = state.handle_command(engine, Command.BROWSE)
         assert result is not None
         assert result.messages[0] == "Available wares:"
         assert "Your silver:" in result.messages[-2]
@@ -143,4 +143,4 @@ class TestShopPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = ShopPhaseState()
-        assert state.handle_command(engine, "unknown") is None
+        assert state.handle_command(engine, Command.MOVE) is None

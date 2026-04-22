@@ -140,7 +140,8 @@ class GameEngine:
         if index < 0 or index >= len(SHOP_ITEMS):
             return ActionResult(messages=["Invalid item."])
 
-        item, price = SHOP_ITEMS[index]
+        entry = SHOP_ITEMS[index]
+        item, price = entry.item, entry.price
 
         if self.state.player.silver < price:
             return ActionResult(

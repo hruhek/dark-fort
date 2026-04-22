@@ -36,19 +36,6 @@ def roll(expression: str) -> int:
     raise ValueError(f"Unknown dice expression: {expression}")
 
 
-# TODO: do we use these functions?
-def roll_d4() -> int:
-    return random.randint(1, 4)
-
-
-def roll_d6() -> int:
-    return random.randint(1, 6)
-
-
-def roll_2d6() -> int:
-    return random.randint(1, 6) + random.randint(1, 6)
-
-
 def chance_in_6(chance: int) -> bool:
     """Return True with X-in-6 probability."""
     return random.randint(1, 6) <= chance

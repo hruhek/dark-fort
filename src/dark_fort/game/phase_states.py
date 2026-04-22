@@ -22,7 +22,7 @@ class PhaseState(ABC):
 
     @abstractmethod
     def handle_command(
-        self, engine: GameEngine, action: str
+        self, engine: GameEngine, action: Command
     ) -> ActionResult | None: ...
 
 
@@ -30,11 +30,12 @@ class ExploringPhaseState(PhaseState):
     phase = Phase.EXPLORING
     available_commands = [Command.EXPLORE, Command.INVENTORY]
 
-    def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
-        # TODO: why action is not a Command?
-        if action == "explore":
+    def handle_command(
+        self, engine: GameEngine, action: Command
+    ) -> ActionResult | None:
+        if action == Command.EXPLORE:
             return engine.enter_new_room()
-        if action == "inventory":
+        if action == Command.INVENTORY:
             player = engine.state.player
             if not player.inventory:
                 return ActionResult(messages=["Your inventory is empty."])
@@ -60,13 +61,14 @@ class CombatPhaseState(PhaseState):
     phase = Phase.COMBAT
     available_commands = [Command.ATTACK, Command.FLEE, Command.USE_ITEM]
 
-    def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
-        # TODO: why action is not a Command?
-        if action == "attack":
+    def handle_command(
+        self, engine: GameEngine, action: Command
+    ) -> ActionResult | None:
+        if action == Command.ATTACK:
             return engine.attack()
-        if action == "flee":
+        if action == Command.FLEE:
             return engine.flee()
-        if action == "use_item":
+        if action == Command.USE_ITEM:
             return ActionResult(messages=["Use item: (type item number)"])
         return None
 
@@ -75,16 +77,15 @@ class ShopPhaseState(PhaseState):
     phase = Phase.SHOP
     available_commands = [Command.BROWSE, Command.LEAVE]
 
-    def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
-        # TODO: why action is not a Command?
-        if action == "leave":
+    def handle_command(
+        self, engine: GameEngine, action: Command
+    ) -> ActionResult | None:
+        if action == Command.LEAVE:
             return engine.leave_shop()
-        if action == "browse":
+        if action == Command.BROWSE:
             messages = ["Available wares:"]
-            for i, (item, price) in enumerate(SHOP_ITEMS):
-                stats = item.display_stats()
-                stats_str = f" ({stats})" if stats else ""
-                messages.append(f"  {i + 1}. {item.name}{stats_str} — {price}s")
+            for i, entry in enumerate(SHOP_ITEMS):
+                messages.append(f"  {i + 1}. {entry.display_stats()}")
             messages.append(f"\nYour silver: {engine.state.player.silver}s")
             messages.append("Press 1-9, 0 for item 10, or L to leave.")
             return ActionResult(messages=messages)

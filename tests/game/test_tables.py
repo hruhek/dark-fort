@@ -57,12 +57,12 @@ class TestShopItems:
         assert len(SHOP_ITEMS) > 0
 
     def test_all_have_price(self):
-        for _item, price in SHOP_ITEMS:
-            assert price > 0
+        for entry in SHOP_ITEMS:
+            assert entry.price > 0
 
     def test_get_shop_item_by_index(self):
-        item, price = get_shop_item(0)
-        assert price == 4
+        entry = get_shop_item(0)
+        assert entry.price == 4
 
 
 class TestRoomShapes:
@@ -118,10 +118,9 @@ class TestShopItemsArmor:
     def test_armor_shop_item_has_absorb(self):
         from dark_fort.game.models import Armor
 
-        armor_items = [
-            (item, price) for item, price in SHOP_ITEMS if isinstance(item, Armor)
-        ]
+        armor_items = [entry for entry in SHOP_ITEMS if isinstance(entry.item, Armor)]
         assert len(armor_items) >= 1
-        armor_item, price = armor_items[0]
-        assert armor_item.absorb == "d4"
-        assert price == 10
+        armor = armor_items[0].item
+        assert isinstance(armor, Armor)
+        assert armor.absorb == "d4"
+        assert armor_items[0].price == 10

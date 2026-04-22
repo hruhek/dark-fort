@@ -96,7 +96,7 @@ class GameScreen(Screen):
         phase = self.engine.state.phase
         state = PHASE_STATES.get(phase)
         if state:
-            return state.handle_command(self.engine, action)
+            return state.handle_command(self.engine, Command(action))
         return None
 
     def _handle_phase_change(self, result: ActionResult) -> None:
@@ -129,14 +129,10 @@ class ShopScreen(Screen):
         yield CommandBar(id="commands", commands=[Command.LEAVE])
 
     def on_mount(self) -> None:
-        from dark_fort.game.tables import SHOP_ITEMS
-
         log = self.query_one("#shop-log", LogView)
         log.add_message("Available wares:")
-        for i, (item, price) in enumerate(SHOP_ITEMS):
-            stats = item.display_stats()
-            stats_str = f" ({stats})" if stats else ""
-            log.add_message(f"  {i + 1}. {item.name}{stats_str} — {price}s")
+        for i, entry in enumerate(SHOP_ITEMS):
+            log.add_message(f"  {i + 1}. {entry.display_stats()}")
         log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
         log.add_message("Press 1-9, 0 for item 10, or L to leave.")
         self.focus()

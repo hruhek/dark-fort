@@ -15,6 +15,7 @@ from dark_fort.game.enums import (
 )
 
 
+# TODO: what are benefits of Item being a BaseModel?
 class Item(BaseModel):
     name: str
 

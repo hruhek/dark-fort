@@ -92,6 +92,7 @@ TOUGH_MONSTERS: list[Monster] = [
 # Shop table — (Item, price) pairs
 # ---------------------------------------------------------------------------
 
+# TODO: return shema new schema object ItemWithPrice
 SHOP_ITEMS: list[tuple[AnyItem, int]] = [
     (Potion(name="Potion", heal="d6"), 4),
     (Scroll(name="Random scroll", scroll_type=ScrollType.SUMMON_DAEMON), 7),
@@ -170,9 +171,21 @@ SCROLLS_TABLE: list[tuple[str, ScrollType, str]] = [
         ScrollType.SUMMON_DAEMON,
         "The daemon helps you d4 fights, dealing d4 damage",
     ),
-    ("Palms Open the Southern Gate", ScrollType.SOUTHERN_GATE, "d6+1 damage, d4 uses"),
-    ("Aegis of Sorrow", ScrollType.AEGIS_OF_SORROW, "-d4 damage, d4 uses"),
-    ("False Omen", ScrollType.FALSE_OMEN, "Choose Room result OR reroll any die"),
+    (
+        "Palms Open the Southern Gate",
+        ScrollType.SOUTHERN_GATE,
+        "d6+1 damage, d4 uses",
+    ),
+    (
+        "Aegis of Sorrow",
+        ScrollType.AEGIS_OF_SORROW,
+        "-d4 damage, d4 uses",
+    ),
+    (
+        "False Omen",
+        ScrollType.FALSE_OMEN,
+        "Choose Room result OR reroll any die",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -206,6 +219,7 @@ LEVEL_BENEFITS: list[str] = [
     "Gain Mighty Zweihänder",
     "Choose 1 Weak + 1 Tough monster; their damage is halved permanently",
 ]
+
 
 # ---------------------------------------------------------------------------
 # Helper functions

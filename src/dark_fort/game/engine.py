@@ -166,19 +166,21 @@ class GameEngine:
 
         match item.equip_slot:
             case EquipSlot.WEAPON:
+                weapon = item
                 if self.state.player.weapon is not None:
                     self.state.player.inventory.append(self.state.player.weapon)
-                    msg = f"You buy {item.name} for {price}s. {self.state.player.weapon.name} moved to inventory."
+                    msg = f"You buy {weapon.name} for {price}s. {self.state.player.weapon.name} moved to inventory."
                 else:
-                    msg = f"You buy {item.name} for {price}s."
-                self.state.player.weapon = item
+                    msg = f"You buy {weapon.name} for {price}s."
+                self.state.player.weapon = weapon  # ty: ignore[invalid-assignment]
             case EquipSlot.ARMOR:
+                armor = item
                 if self.state.player.armor is not None:
                     self.state.player.inventory.append(self.state.player.armor)
-                    msg = f"You buy {item.name} for {price}s. {self.state.player.armor.name} moved to inventory."
+                    msg = f"You buy {armor.name} for {price}s. {self.state.player.armor.name} moved to inventory."
                 else:
-                    msg = f"You buy {item.name} for {price}s."
-                self.state.player.armor = item
+                    msg = f"You buy {armor.name} for {price}s."
+                self.state.player.armor = armor  # ty: ignore[invalid-assignment]
             case EquipSlot.SPECIAL:
                 self.state.player.cloak_charges = roll("d4")
                 msg = f"You buy {item.name} for {price}s ({self.state.player.cloak_charges} charges)."
@@ -252,6 +254,20 @@ class GameEngine:
 
         self.state.level_up_queue = False
         return ActionResult(messages=messages)
+
+    def save(self) -> dict:
+        return {
+            "state": self.state.snapshot(),
+            "room_counter": self._dungeon._counter,
+        }
+
+    @classmethod
+    def load(cls, data: dict) -> GameEngine:
+        engine = cls.__new__(cls)
+        engine.state = GameState.restore(data["state"])
+        engine._dungeon = DungeonBuilder()
+        engine._dungeon._counter = data["room_counter"]
+        return engine
 
     def _generate_room(self, is_entrance: bool = False) -> Room:
         """Generate a new room via DungeonBuilder."""

@@ -203,6 +203,40 @@ class TestEquipSwapIntegration:
         assert engine.state.player.armor.name == "Armor"
 
 
+class TestSaveLoad:
+    def test_save_and_load_preserves_state(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.silver = 42
+        engine.state.player.points = 10
+
+        saved = engine.save()
+        loaded = GameEngine.load(saved)
+
+        assert loaded.state.player.silver == 42
+        assert loaded.state.player.points == 10
+        assert loaded.state.phase == Phase.EXPLORING
+
+    def test_save_and_load_preserves_rooms(self):
+        engine = GameEngine()
+        engine.start_game()
+        room_count = len(engine.state.rooms)
+
+        saved = engine.save()
+        loaded = GameEngine.load(saved)
+
+        assert len(loaded.state.rooms) == room_count
+
+    def test_save_and_load_preserves_room_counter(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.enter_new_room()
+        saved = engine.save()
+        loaded = GameEngine.load(saved)
+        next_room = loaded._dungeon.build_room()
+        assert next_room.id == len(engine.state.rooms)
+
+
 class TestShopWares:
     def test_shop_wares_populated_on_shop_event(self):
         engine = GameEngine()

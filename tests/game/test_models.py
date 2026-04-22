@@ -129,6 +129,14 @@ class TestGameState:
         assert state.shop_wares == []
         assert state.log == []
 
+    def test_game_state_snapshot_and_restore(self):
+        state = GameState(phase=Phase.EXPLORING)
+        state.player.silver = 42
+        data = state.snapshot()
+        restored = GameState.restore(data)
+        assert restored.phase == Phase.EXPLORING
+        assert restored.player.silver == 42
+
 
 class TestActionResult:
     def test_action_result_with_messages(self):

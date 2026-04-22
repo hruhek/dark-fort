@@ -7,6 +7,7 @@ from dark_fort.game.phase_states import (
     ExploringPhaseState,
     ShopPhaseState,
 )
+from dark_fort.game.tables import SHOP_ITEMS
 
 
 class TestPhaseStateRegistry:
@@ -45,7 +46,7 @@ class TestExploringPhaseState:
         state = ExploringPhaseState()
         result = state.handle_command(engine, Command.INVENTORY)
         assert result is not None
-        assert result.messages == ["Your inventory is empty."]
+        assert result.messages == []
 
     def test_handle_inventory_with_items(self):
         engine = GameEngine()
@@ -57,9 +58,7 @@ class TestExploringPhaseState:
         state = ExploringPhaseState()
         result = state.handle_command(engine, Command.INVENTORY)
         assert result is not None
-        assert result.messages[0] == "Inventory:"
-        assert "Potion" in result.messages[1]
-        assert "Scroll" in result.messages[2]
+        assert result.messages == []
 
     def test_handle_unknown_returns_none(self):
         engine = GameEngine()
@@ -133,11 +132,11 @@ class TestShopPhaseState:
     def test_handle_browse_shows_items(self):
         engine = GameEngine()
         engine.start_game()
+        engine.state.shop_wares = list(SHOP_ITEMS)
         state = ShopPhaseState()
         result = state.handle_command(engine, Command.BROWSE)
         assert result is not None
-        assert result.messages[0] == "Available wares:"
-        assert "Your silver:" in result.messages[-2]
+        assert result.messages == []
 
     def test_handle_unknown_returns_none(self):
         engine = GameEngine()

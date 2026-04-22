@@ -3,9 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from dark_fort.game.enums import Command, ItemType, Phase
+from dark_fort.game.enums import Command, Phase
 from dark_fort.game.models import ActionResult
-from dark_fort.game.tables import SHOP_ITEMS
 
 if TYPE_CHECKING:
     from dark_fort.game.engine import GameEngine
@@ -36,24 +35,7 @@ class ExploringPhaseState(PhaseState):
         if action == Command.EXPLORE:
             return engine.enter_new_room()
         if action == Command.INVENTORY:
-            player = engine.state.player
-            if not player.inventory:
-                return ActionResult(messages=["Your inventory is empty."])
-            messages = ["Inventory:"]
-            type_prefixes = {
-                ItemType.WEAPON: "W",
-                ItemType.ARMOR: "A",
-                ItemType.POTION: "P",
-                ItemType.SCROLL: "S",
-                ItemType.ROPE: "R",
-                ItemType.CLOAK: "C",
-            }
-            for i, item in enumerate(player.inventory):
-                prefix = type_prefixes.get(item.type, "?")
-                stats = item.display_stats()
-                stats_str = f" ({stats})" if stats else ""
-                messages.append(f"  {i + 1}. [{prefix}] {item.name}{stats_str}")
-            return ActionResult(messages=messages)
+            return ActionResult(messages=[])
         return None
 
 
@@ -83,12 +65,7 @@ class ShopPhaseState(PhaseState):
         if action == Command.LEAVE:
             return engine.leave_shop()
         if action == Command.BROWSE:
-            messages = ["Available wares:"]
-            for i, entry in enumerate(SHOP_ITEMS):
-                messages.append(f"  {i + 1}. {entry.display_stats()}")
-            messages.append(f"\nYour silver: {engine.state.player.silver}s")
-            messages.append("Press 1-9, 0 for item 10, or L to leave.")
-            return ActionResult(messages=messages)
+            return ActionResult(messages=[])
         return None
 
 

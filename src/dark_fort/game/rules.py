@@ -21,7 +21,7 @@ from dark_fort.game.tables import (
 
 
 def generate_starting_equipment() -> tuple[Weapon, Armor | Potion | Scroll | Cloak]:
-    """Roll 1d4 on weapon table and 1d4 on item table."""
+    """Roll 1d4 on the weapon table and 1d4 on the item table."""
     weapon_idx = roll("d4") - 1
     item_idx = roll("d4") - 1
 

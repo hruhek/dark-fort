@@ -27,6 +27,12 @@ from dark_fort.game.tables import (
 )
 
 
+def _get_benefit_name(number: int) -> str:
+    from dark_fort.game.tables import LEVEL_BENEFITS
+
+    return LEVEL_BENEFITS[number - 1]
+
+
 class GameEngine:
     """Owns GameState and exposes methods for all game actions."""
 
@@ -188,7 +194,7 @@ class GameEngine:
         return item.use(self.state, index)
 
     def check_game_over(self) -> ActionResult:
-        """Check if player is dead."""
+        """Check if the player is dead."""
         if self.state.player.hp <= 0:
             self.state.phase = Phase.GAME_OVER
             return ActionResult(messages=["You have fallen."], phase=Phase.GAME_OVER)
@@ -215,7 +221,7 @@ class GameEngine:
         apply_level_benefit(benefit_number, self.state.player)
         self.state.player.level_benefits.append(benefit_number)
 
-        messages = [f"Benefit: {self._get_benefit_name(benefit_number)}"]
+        messages = [f"Benefit: {_get_benefit_name(benefit_number)}"]
 
         if len(self.state.player.level_benefits) >= 6:
             messages.append("All benefits claimed! You retire victorious!")
@@ -224,11 +230,6 @@ class GameEngine:
 
         self.state.level_up_queue = False
         return ActionResult(messages=messages)
-
-    def _get_benefit_name(self, number: int) -> str:
-        from dark_fort.game.tables import LEVEL_BENEFITS
-
-        return LEVEL_BENEFITS[number - 1]
 
     def _generate_room(self, is_entrance: bool = False) -> Room:
         """Generate a new room with shape, doors, and connections."""

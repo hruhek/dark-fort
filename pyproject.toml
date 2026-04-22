@@ -13,7 +13,7 @@ dependencies = [
 dark-fort = "dark_fort.cli:main"
 
 [build-system]
-requires = ["uv_build"]
+requires = ["uv_build>=0.11,<0.12"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
@@ -31,6 +31,8 @@ ignore = ["E501"]
 [tool.pyright]
 extraPaths = ["src"]
 pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
 
 [tool.ty.environment]
 python-version = "3.13"

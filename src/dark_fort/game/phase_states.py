@@ -31,6 +31,7 @@ class ExploringPhaseState(PhaseState):
     available_commands = [Command.EXPLORE, Command.INVENTORY]
 
     def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
+        # TODO: why action is not a Command?
         if action == "explore":
             return engine.enter_new_room()
         if action == "inventory":
@@ -60,6 +61,7 @@ class CombatPhaseState(PhaseState):
     available_commands = [Command.ATTACK, Command.FLEE, Command.USE_ITEM]
 
     def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
+        # TODO: why action is not a Command?
         if action == "attack":
             return engine.attack()
         if action == "flee":
@@ -74,6 +76,7 @@ class ShopPhaseState(PhaseState):
     available_commands = [Command.BROWSE, Command.LEAVE]
 
     def handle_command(self, engine: GameEngine, action: str) -> ActionResult | None:
+        # TODO: why action is not a Command?
         if action == "leave":
             return engine.leave_shop()
         if action == "browse":

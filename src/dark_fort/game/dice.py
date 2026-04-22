@@ -36,6 +36,7 @@ def roll(expression: str) -> int:
     raise ValueError(f"Unknown dice expression: {expression}")
 
 
+# TODO: do we use these functions?
 def roll_d4() -> int:
     return random.randint(1, 4)
 

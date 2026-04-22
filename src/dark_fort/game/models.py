@@ -204,6 +204,13 @@ class GameState(BaseModel):
     shop_wares: list[ShopEntry] = Field(default_factory=list)
     log: list[str] = Field(default_factory=list)
 
+    def snapshot(self) -> dict:
+        return self.model_dump()
+
+    @classmethod
+    def restore(cls, data: dict) -> GameState:
+        return cls.model_validate(data)
+
 
 class ActionResult(BaseModel):
     messages: list[str]

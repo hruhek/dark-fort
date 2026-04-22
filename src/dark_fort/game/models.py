@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 from dark_fort.game.dice import roll
 from dark_fort.game.enums import (
-    Command,
     ItemType,
     MonsterSpecial,
     MonsterTier,
@@ -200,5 +199,3 @@ class GameState(BaseModel):
 class ActionResult(BaseModel):
     messages: list[str]
     phase: Phase | None = None
-    choices: list[Command] = Field(default_factory=list)
-    state_delta: dict[str, Any] = Field(default_factory=dict)

@@ -131,12 +131,6 @@ class TestActionResult:
         result = ActionResult(messages=[], phase=Phase.COMBAT)
         assert result.phase == Phase.COMBAT
 
-    def test_action_result_with_choices(self):
-        from dark_fort.game.enums import Command
-
-        result = ActionResult(messages=[], choices=[Command.ATTACK, Command.FLEE])
-        assert len(result.choices) == 2
-
 
 class TestArmor:
     def test_create_armor(self):

@@ -152,6 +152,49 @@ class TestGameScreenActions:
             await pilot.pause()
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
 
+    async def test_use_item_key_shows_inventory(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.inventory.append(
+                Potion(name="Potion", heal="d6")
+            )
+            pilot.app.engine.state.combat = CombatState(
+                monster=Monster(name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5),
+                monster_hp=5
+            )
+            pilot.app.engine.state.phase = Phase.COMBAT
+            await pilot.pause()
+            pilot.app.screen._update_commands()
+            await pilot.pause()
+            log = pilot.app.screen.query_one("#log")
+            before_count = log.message_count
+            await pilot.press("u")
+            await pilot.pause()
+            assert log.message_count > before_count
+
+    async def test_digit_key_uses_item(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.inventory.append(
+                Potion(name="Potion", heal="d6")
+            )
+            pilot.app.engine.state.player.hp = 5
+            pilot.app.engine.state.combat = CombatState(
+                monster=Monster(name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5),
+                monster_hp=5
+            )
+            pilot.app.engine.state.phase = Phase.COMBAT
+            await pilot.pause()
+            pilot.app.screen._update_commands()
+            await pilot.pause()
+            await pilot.press("u")  # Enter item selection mode
+            await pilot.pause()
+            await pilot.press("1")  # Use first item
+            await pilot.pause()
+            assert pilot.app.engine.state.player.hp > 5  # Potion healed
+
 
 class TestShopScreen:
     async def test_shop_displays_items_on_mount(self):

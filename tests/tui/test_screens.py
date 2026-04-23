@@ -195,6 +195,21 @@ class TestGameScreenActions:
             await pilot.pause()
             assert pilot.app.engine.state.player.hp > 5  # Potion healed
 
+    async def test_button_labels_show_shortcuts(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.combat = CombatState(
+                monster=Monster(name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5),
+                monster_hp=5
+            )
+            pilot.app.engine.state.phase = Phase.COMBAT
+            await pilot.pause()
+            pilot.app.screen._update_commands()
+            await pilot.pause()
+            attack_button = pilot.app.screen.query_one("#cmd-attack")
+            assert "[[A]]ttack" in attack_button.label.plain
+
 
 class TestShopScreen:
     async def test_shop_displays_items_on_mount(self):

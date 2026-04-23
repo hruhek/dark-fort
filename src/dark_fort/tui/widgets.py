@@ -91,9 +91,17 @@ class CommandBar(Horizontal):
         super().__init__(**kwargs)
         self.commands = commands or []
 
+    @staticmethod
+    def _format_button_label(cmd: Command) -> str:
+        """Format button label with shortcut hint: [A]ttack"""
+        name = cmd.value.replace("_", " ").title()
+        if name:
+            return f"[[{name[0]}]]{name[1:]}"
+        return name
+
     def compose(self) -> ComposeResult:
         for cmd in self.commands:
-            button = Button(cmd.value.replace("_", " ").title(), id=f"cmd-{cmd.value}")
+            button = Button(self._format_button_label(cmd), id=f"cmd-{cmd.value}")
             yield button
 
     def watch_commands(self) -> None:
@@ -101,5 +109,5 @@ class CommandBar(Horizontal):
             return
         self.remove_children()
         for cmd in self.commands:
-            button = Button(cmd.value.replace("_", " ").title(), id=f"cmd-{cmd.value}")
+            button = Button(self._format_button_label(cmd), id=f"cmd-{cmd.value}")
             self.mount(button)

@@ -22,7 +22,8 @@ class DungeonBuilder:
             explored=is_entrance,
         )
 
-    def connect(self, room_a: Room, room_b: Room) -> None:
+    @staticmethod
+    def connect(room_a: Room, room_b: Room) -> None:
         room_a.connections.append(room_b.id)
         room_b.connections.append(room_a.id)
 

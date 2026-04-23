@@ -10,7 +10,7 @@ TYPE_PREFIXES: dict[ItemType, str] = {
     ItemType.CLOAK: "C",
 }
 
-
+# TODO:
 def format_inventory(state: GameState) -> list[str]:
     player = state.player
     if not player.inventory:

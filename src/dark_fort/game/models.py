@@ -41,6 +41,7 @@ class Weapon(Item):
         return stats
 
     def use(self, state: GameState, index: int) -> ActionResult:
+        # TODO: duplicate code like in Armor
         messages: list[str] = []
         player = state.player
         if player.weapon is not None:
@@ -61,6 +62,7 @@ class Armor(Item):
         return self.absorb
 
     def use(self, state: GameState, index: int) -> ActionResult:
+        # TODO: duplicate code like in Weapon
         messages: list[str] = []
         player = state.player
         if player.armor is not None:

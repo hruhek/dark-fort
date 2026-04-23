@@ -59,6 +59,7 @@ class GameEngine:
             case Potion() | Scroll():
                 self.state.player.inventory.append(item)
             case Cloak():
+                # TODO: Cloak charges should be on Cloak, not on player.
                 self.state.player.cloak_charges = roll("d4")
 
         entrance = self._generate_room(is_entrance=True)
@@ -75,6 +76,7 @@ class GameEngine:
 
         entrance_result = roll("d4") - 1
         entrance_msg = ENTRANCE_RESULTS[entrance_result]
+        # TODO: Resolve entrance result
         messages.append(entrance_msg)
 
         self.state.phase = Phase.EXPLORING

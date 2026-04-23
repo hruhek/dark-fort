@@ -82,8 +82,8 @@ class GameScreen(Screen):
 
     def _update_commands(self) -> None:
         phase = self.engine.state.phase
-        state = PHASE_STATES.get(phase)
-        commands = state.available_commands if state else []
+        phase_state = PHASE_STATES.get(phase)
+        commands = phase_state.available_commands if phase_state else []
 
         cmd_bar = self.query_one("#commands", CommandBar)
         cmd_bar.commands = commands
@@ -127,8 +127,8 @@ class GameScreen(Screen):
             key = event.character.lower()
             command = self.KEY_MAP[key]
             phase = self.engine.state.phase
-            state = PHASE_STATES.get(phase)
-            if state and command in state.available_commands:
+            phase_state = PHASE_STATES.get(phase)
+            if phase_state and command in phase_state.available_commands:
                 if command == Command.USE_ITEM:
                     self.selecting_item = True
                     self._log_messages(format_inventory(self.engine.state))
@@ -171,9 +171,9 @@ class GameScreen(Screen):
 
     def _handle_command(self, action: str) -> ActionResult | None:
         phase = self.engine.state.phase
-        state = PHASE_STATES.get(phase)
-        if state:
-            return state.handle_command(self.engine, Command(action))
+        phase_state = PHASE_STATES.get(phase)
+        if phase_state:
+            return phase_state.handle_command(self.engine, Command(action))
         return None
 
     def _handle_phase_change(self, result: ActionResult) -> None:

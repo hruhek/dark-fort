@@ -41,15 +41,7 @@ class Weapon(Item):
         return stats
 
     def use(self, state: GameState, index: int) -> ActionResult:
-        # TODO: duplicate code like in Armor
-        messages: list[str] = []
-        player = state.player
-        if player.weapon is not None:
-            player.inventory.append(player.weapon)
-            messages.append(f"{player.weapon.name} moved to inventory.")
-        player.weapon = self
-        messages.append(f"You equip the {self.name}.")
-        player.inventory.pop(index)
+        messages = state.player.equip(self, index)
         return ActionResult(messages=messages)
 
 
@@ -62,15 +54,7 @@ class Armor(Item):
         return self.absorb
 
     def use(self, state: GameState, index: int) -> ActionResult:
-        # TODO: duplicate code like in Weapon
-        messages: list[str] = []
-        player = state.player
-        if player.armor is not None:
-            player.inventory.append(player.armor)
-            messages.append(f"{player.armor.name} moved to inventory.")
-        player.armor = self
-        messages.append(f"You equip the {self.name}.")
-        player.inventory.pop(index)
+        messages = state.player.equip(self, index)
         return ActionResult(messages=messages)
 
 
@@ -178,6 +162,18 @@ class Player(BaseModel):
         if len(v) != len(set(v)):
             raise ValueError("level_benefits must contain unique values")
         return v
+
+    def equip(self, item: Weapon | Armor, index: int) -> list[str]:
+        slot_attr = "weapon" if isinstance(item, Weapon) else "armor"
+        messages: list[str] = []
+        current = getattr(self, slot_attr)
+        if current is not None:
+            self.inventory.append(current)
+            messages.append(f"{current.name} moved to inventory.")
+        setattr(self, slot_attr, item)
+        messages.append(f"You equip the {item.name}.")
+        self.inventory.pop(index)
+        return messages
 
 
 class Room(BaseModel):

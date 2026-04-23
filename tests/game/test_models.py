@@ -95,6 +95,34 @@ class TestPlayer:
         with pytest.raises(ValidationError):
             Player(level_benefits=[1, 2, 2, 3])
 
+    def test_equip_weapon(self):
+        player = Player()
+        old_weapon = Weapon(name="Dagger", damage="d4")
+        new_weapon = Weapon(name="Sword", damage="d6")
+        player.weapon = old_weapon
+        player.inventory = [new_weapon]
+
+        messages = player.equip(new_weapon, 0)
+
+        assert player.weapon == new_weapon
+        assert old_weapon in player.inventory
+        assert "Sword" in messages[1]
+        assert len(player.inventory) == 1
+
+    def test_equip_armor(self):
+        player = Player()
+        old_armor = Armor(name="Leather", absorb="d4")
+        new_armor = Armor(name="Chain", absorb="d6")
+        player.armor = old_armor
+        player.inventory = [new_armor]
+
+        messages = player.equip(new_armor, 0)
+
+        assert player.armor == new_armor
+        assert old_armor in player.inventory
+        assert "Chain" in messages[1]
+        assert len(player.inventory) == 1
+
 
 class TestRoom:
     def test_create_room(self):

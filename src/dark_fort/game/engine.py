@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 from dark_fort.game.dice import roll
 from dark_fort.game.dungeon import DungeonBuilder
 from dark_fort.game.enums import EquipSlot, Phase
@@ -7,9 +9,11 @@ from dark_fort.game.models import (
     ActionResult,
     Armor,
     Cloak,
+    CombatState,
     GameState,
     Potion,
     Room,
+    Rope,
     Scroll,
 )
 from dark_fort.game.rules import (
@@ -22,8 +26,12 @@ from dark_fort.game.rules import (
 )
 from dark_fort.game.tables import (
     ENTRANCE_RESULTS,
+    ITEMS_TABLE,
     ROOM_RESULTS,
+    SCROLLS_TABLE,
     SHOP_ITEMS,
+    WEAK_MONSTERS,
+    WEAPONS_TABLE,
 )
 
 
@@ -76,11 +84,47 @@ class GameEngine:
 
         entrance_result = roll("d4") - 1
         entrance_msg = ENTRANCE_RESULTS[entrance_result]
-        # TODO: Resolve entrance result
         messages.append(entrance_msg)
 
-        self.state.phase = Phase.EXPLORING
-        return ActionResult(messages=messages, phase=Phase.EXPLORING)
+        match entrance_result:
+            case 0:  # Find a random item
+                item_roll = roll("d6") - 1
+                match ITEMS_TABLE[item_roll]:
+                    case "Random weapon":
+                        random_item = random.choice(WEAPONS_TABLE)
+                    case "Potion":
+                        random_item = Potion(name="Potion", heal="d6")
+                    case "Rope":
+                        random_item = Rope(name="Rope")
+                    case "Random scroll":
+                        scroll_name, scroll_type, _ = random.choice(SCROLLS_TABLE)
+                        random_item = Scroll(
+                            name=f"Scroll: {scroll_name}", scroll_type=scroll_type
+                        )
+                    case "Armor":
+                        random_item = Armor(name="Armor", absorb="d4")
+                    case "Cloak of invisibility":
+                        random_item = Cloak(name="Cloak of invisibility")
+                    case _:
+                        random_item = Potion(name="Potion", heal="d6")
+                self.state.player.inventory.append(random_item)
+                messages.append(f"You find a {random_item.name}.")
+            case 1:  # A weak monster stands guard
+                monster = random.choice(WEAK_MONSTERS)
+                self.state.combat = CombatState(monster=monster, monster_hp=monster.hp)
+                self.state.phase = Phase.COMBAT
+                messages.append(f"A {monster.name} attacks!")
+            case 2:  # A dying mystic gives a random scroll
+                scroll_name, scroll_type, _ = random.choice(SCROLLS_TABLE)
+                scroll = Scroll(name=f"Scroll: {scroll_name}", scroll_type=scroll_type)
+                self.state.player.inventory.append(scroll)
+                messages.append(f"The mystic gives you a {scroll.name}.")
+            case _:  # Quiet — nothing
+                pass
+
+        if self.state.phase == Phase.ENTRANCE:
+            self.state.phase = Phase.EXPLORING
+        return ActionResult(messages=messages, phase=self.state.phase)
 
     def enter_new_room(self) -> ActionResult:
         """Move to a new room through an unexplored door."""

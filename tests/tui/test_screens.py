@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from dark_fort.game.enums import Command, MonsterTier, Phase
 from dark_fort.game.models import CombatState, Monster, Potion
 from dark_fort.game.tables import SHOP_ITEMS
@@ -16,7 +18,11 @@ class TestTitleScreen:
             log = pilot.app.screen.query_one("#log")
             assert log.message_count > 0  # ty: ignore[unresolved-attribute]
 
-    async def test_starting_game_sets_exploring_phase(self):
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_starting_game_sets_exploring_phase(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -31,7 +37,11 @@ class TestTitleScreen:
 
 
 class TestGameScreenPhaseCommands:
-    async def test_exploring_phase_shows_explore_and_inventory(self):
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_exploring_phase_shows_explore_and_inventory(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -107,7 +117,11 @@ class TestGameScreenActions:
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
             assert pilot.app.engine.state.combat is None  # ty: ignore[unresolved-attribute]
 
-    async def test_explore_button_enters_new_room(self):
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_explore_button_enters_new_room(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -122,7 +136,11 @@ class TestGameScreenActions:
             # Verify a new room was added
             assert len(pilot.app.engine.state.rooms) > len(initial_rooms)  # ty: ignore[unresolved-attribute]
 
-    async def test_inventory_button_shows_empty_message(self):
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_inventory_button_shows_empty_message(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -132,7 +150,11 @@ class TestGameScreenActions:
             log = pilot.app.screen.query_one("#log")
             assert log.message_count > 0  # ty: ignore[unresolved-attribute]
 
-    async def test_inventory_button_shows_items(self):
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_inventory_button_shows_items(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()

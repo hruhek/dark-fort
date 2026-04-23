@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Phase
 from dark_fort.game.models import Armor, Weapon
@@ -204,7 +206,9 @@ class TestEquipSwapIntegration:
 
 
 class TestSaveLoad:
-    def test_save_and_load_preserves_state(self):
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_save_and_load_preserves_state(self, _mock_engine_roll, _mock_rules_roll):
         engine = GameEngine()
         engine.start_game()
         engine.state.player.silver = 42

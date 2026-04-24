@@ -33,8 +33,7 @@ class ExploringPhaseState(PhaseState):
         self, engine: GameEngine, action: Command
     ) -> ActionResult | None:
         if action == Command.MOVE:
-            # MOVE is handled by GameScreen with digit-key exit selection
-            return ActionResult(messages=[])
+            return ActionResult(messages=engine.get_room_exits())
         if action == Command.INVENTORY:
             return ActionResult(messages=[])
         return None

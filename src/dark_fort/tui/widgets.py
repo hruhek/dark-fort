@@ -105,10 +105,10 @@ class CommandBar(Horizontal):
             button = Button(self._format_button_label(cmd), id=f"cmd-{cmd.value}")
             yield button
 
-    def watch_commands(self) -> None:
+    async def watch_commands(self) -> None:
         if not self.is_mounted:
             return
-        self.remove_children()
+        await self.remove_children()
         for cmd in self.commands:
             button = Button(self._format_button_label(cmd), id=f"cmd-{cmd.value}")
-            self.mount(button)
+            await self.mount(button)

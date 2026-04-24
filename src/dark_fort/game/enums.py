@@ -28,7 +28,6 @@ class Phase(StrEnum):
 class Command(StrEnum):
     ATTACK = auto()
     FLEE = auto()
-    USE_ITEM = auto()
     EXPLORE = auto()
     INVENTORY = auto()
     MOVE = auto()

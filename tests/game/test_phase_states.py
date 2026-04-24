@@ -1,3 +1,5 @@
+import pytest
+
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Command, Phase, ScrollType
 from dark_fort.game.models import Potion, Scroll
@@ -77,12 +79,17 @@ class TestCombatPhaseState:
         assert state.available_commands == [
             Command.ATTACK,
             Command.FLEE,
-            Command.USE_ITEM,
+            Command.INVENTORY,
         ]
+
+    def test_use_item_command_removed(self):
+        with pytest.raises(AttributeError):
+            _ = Command.USE_ITEM  # ty: ignore[unresolved-attribute]
 
     def test_handle_attack_without_combat(self):
         engine = GameEngine()
         engine.start_game()
+        engine.state.combat = None
         state = CombatPhaseState()
         result = state.handle_command(engine, Command.ATTACK)
         assert result is not None
@@ -96,11 +103,11 @@ class TestCombatPhaseState:
         assert result is not None
         assert "No monster to flee" in result.messages[0]
 
-    def test_handle_use_item(self):
+    def test_handle_inventory(self):
         engine = GameEngine()
         engine.start_game()
         state = CombatPhaseState()
-        result = state.handle_command(engine, Command.USE_ITEM)
+        result = state.handle_command(engine, Command.INVENTORY)
         assert result is not None
         assert result.messages == []  # Empty; UI handles prompt
 

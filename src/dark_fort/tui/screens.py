@@ -53,7 +53,6 @@ class GameScreen(Screen):
         "i": Command.INVENTORY,
         "a": Command.ATTACK,
         "f": Command.FLEE,
-        "u": Command.USE_ITEM,
         "b": Command.BROWSE,
         "l": Command.LEAVE,
     }
@@ -104,8 +103,13 @@ class GameScreen(Screen):
         status_bar.explored = self.engine.explored_count
 
     def on_key(self, event) -> None:
-        # Handle item selection mode (digit keys)
+        # Handle item selection mode (digit keys or Escape)
         if self.selecting_item:
+            if event.key == "escape":
+                self.selecting_item = False
+                self._log_messages(["Cancelled."])
+                self._update_commands()
+                return
             if event.character and event.character.isdigit():
                 digit = int(event.character)
                 index = digit - 1 if digit != 0 else 9
@@ -129,17 +133,20 @@ class GameScreen(Screen):
             phase = self.engine.state.phase
             phase_state = PHASE_STATES.get(phase)
             if phase_state and command in phase_state.available_commands:
-                if command == Command.USE_ITEM:
+                if command == Command.INVENTORY:
+                    inventory = self.engine.state.player.inventory
+                    if not inventory:
+                        self._log_messages(["No items in inventory."])
+                        return
                     self.selecting_item = True
                     self._log_messages(format_inventory(self.engine.state))
-                    self._log_messages(["Use item: (type item number)"])
+                    self._log_messages(
+                        ["Use item: (type item number or Esc to cancel)"]
+                    )
                 else:
                     result = self._handle_command(command.value)
                     if result:
-                        if command == Command.INVENTORY:
-                            self._log_messages(format_inventory(self.engine.state))
-                        else:
-                            self._log_messages(result.messages)
+                        self._log_messages(result.messages)
                         if result.phase:
                             self._handle_phase_change(result)
                         self._update_commands()
@@ -152,18 +159,19 @@ class GameScreen(Screen):
 
         action = button_id.replace("cmd-", "")
         command = Command(action)
-        if command == Command.USE_ITEM:
+        if command == Command.INVENTORY:
+            inventory = self.engine.state.player.inventory
+            if not inventory:
+                self._log_messages(["No items in inventory."])
+                return
             self.selecting_item = True
             self._log_messages(format_inventory(self.engine.state))
-            self._log_messages(["Use item: (type item number)"])
+            self._log_messages(["Use item: (type item number or Esc to cancel)"])
             return
 
         result = self._handle_command(action)
         if result:
-            if command == Command.INVENTORY:
-                self._log_messages(format_inventory(self.engine.state))
-            else:
-                self._log_messages(result.messages)
+            self._log_messages(result.messages)
             if result.phase:
                 self._handle_phase_change(result)
             self._update_commands()

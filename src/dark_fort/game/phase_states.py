@@ -41,7 +41,7 @@ class ExploringPhaseState(PhaseState):
 
 class CombatPhaseState(PhaseState):
     phase = Phase.COMBAT
-    available_commands = [Command.ATTACK, Command.FLEE, Command.USE_ITEM]
+    available_commands = [Command.ATTACK, Command.FLEE, Command.INVENTORY]
 
     def handle_command(
         self, engine: GameEngine, action: Command
@@ -50,7 +50,7 @@ class CombatPhaseState(PhaseState):
             return engine.attack()
         if action == Command.FLEE:
             return engine.flee()
-        if action == Command.USE_ITEM:
+        if action == Command.INVENTORY:
             # Return empty result; GameScreen handles inventory display
             return ActionResult(messages=[])
         return None

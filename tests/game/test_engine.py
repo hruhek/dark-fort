@@ -256,6 +256,19 @@ class TestUseItem:
         assert len(engine.state.player.inventory) == 0
         assert any("unroll" in m.lower() for m in result.messages)
 
+    def test_use_scroll_shows_not_implemented_message(self):
+        from dark_fort.game.enums import ScrollType
+        from dark_fort.game.models import Scroll
+
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.inventory.append(
+            Scroll(name="Scroll of Fire", scroll_type=ScrollType.SUMMON_DAEMON)
+        )
+        result = engine.use_item(0)
+        assert any("not yet implemented" in m.lower() for m in result.messages)
+
     def test_use_rope_returns_empty_messages(self):
         from dark_fort.game.models import Rope
 

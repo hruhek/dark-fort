@@ -14,3 +14,7 @@
 # add ctrl+q to start and end screen
 - [x] ctrl+q is used to exit game, user should know that
 
+# use item from inventory
+- [x] player should be able to use item from inventory during exploration phase
+- [x] player should be able to exit inventory or use item screen
+

@@ -175,13 +175,18 @@ class Player(BaseModel):
         return messages
 
 
+class Exit(BaseModel):
+    door_number: int
+    destination: int
+    direction: str
+
+
 class Room(BaseModel):
     id: int
     shape: str
-    doors: int
     result: str
     explored: bool = False
-    connections: list[int] = Field(default_factory=list)
+    exits: list[Exit] = Field(default_factory=list)
 
 
 class CombatState(BaseModel):

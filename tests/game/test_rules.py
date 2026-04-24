@@ -68,9 +68,7 @@ class TestLevelUp:
         state = GameState(phase=Phase.EXPLORING)
         state.player.points = 15
         for i in range(12):
-            state.rooms[i] = Room(
-                id=i, shape="Square", doors=1, result="nothing", explored=True
-            )
+            state.rooms[i] = Room(id=i, shape="Square", result="nothing", explored=True)
 
         assert check_level_up(state) is True
 
@@ -78,9 +76,7 @@ class TestLevelUp:
         state = GameState(phase=Phase.EXPLORING)
         state.player.points = 10
         for i in range(12):
-            state.rooms[i] = Room(
-                id=i, shape="Square", doors=1, result="nothing", explored=True
-            )
+            state.rooms[i] = Room(id=i, shape="Square", result="nothing", explored=True)
 
         assert check_level_up(state) is False
 
@@ -88,9 +84,7 @@ class TestLevelUp:
         state = GameState(phase=Phase.EXPLORING)
         state.player.points = 15
         for i in range(5):
-            state.rooms[i] = Room(
-                id=i, shape="Square", doors=1, result="nothing", explored=True
-            )
+            state.rooms[i] = Room(id=i, shape="Square", result="nothing", explored=True)
 
         assert check_level_up(state) is False
 

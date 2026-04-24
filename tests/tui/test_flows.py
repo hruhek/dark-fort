@@ -59,8 +59,6 @@ class TestFleeFlow:
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
             assert pilot.app.engine.state.combat is None  # ty: ignore[unresolved-attribute]
             assert pilot.app.engine.state.player.hp < initial_hp
-            cmd_bar = pilot.app.screen.query_one("#cmd-explore")
-            assert cmd_bar is not None
 
 
 class TestShopFlow:

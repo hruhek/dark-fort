@@ -1,4 +1,9 @@
-from dark_fort.game.enums import MonsterSpecial, MonsterTier, RoomEvent, ScrollType
+from dark_fort.game.enums import (
+    MonsterSpecial,
+    MonsterTier,
+    RoomEvent,
+    ScrollType,
+)
 from dark_fort.game.models import (
     Armor,
     Cloak,
@@ -142,11 +147,11 @@ ROOM_RESULTS: list[RoomEvent] = [
 # Entrance room table — indexed by d4 minus 1
 # ---------------------------------------------------------------------------
 
-ENTRANCE_RESULTS: list[str] = [
-    "Find a random item",
-    "A weak monster stands guard",
-    "A dying mystic gives a random scroll",
-    "The entrance is eerily quiet",
+ENTRANCE_RESULTS: list[RoomEvent] = [
+    RoomEvent.ENTRANCE_ITEM,
+    RoomEvent.WEAK_MONSTER,
+    RoomEvent.ENTRANCE_MYSTIC,
+    RoomEvent.EMPTY,
 ]
 
 # ---------------------------------------------------------------------------

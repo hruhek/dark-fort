@@ -13,6 +13,7 @@ from dark_fort.game.models import (
     Armor,
     Cloak,
     CombatState,
+    Exit,
     GameState,
     Monster,
     Player,
@@ -124,15 +125,29 @@ class TestPlayer:
         assert len(player.inventory) == 1
 
 
+def test_exit_model():
+    exit = Exit(door_number=1, destination=5, direction="north")
+    assert exit.door_number == 1
+    assert exit.destination == 5
+    assert exit.direction == "north"
+
+
 class TestRoom:
     def test_create_room(self):
-        room = Room(id=1, shape="Square", doors=2, result="nothing")
+        room = Room(id=1, shape="Square", result="nothing")
         assert room.explored is False
-        assert room.connections == []
+        assert room.exits == []
 
     def test_explored_room(self):
-        room = Room(id=1, shape="Square", doors=2, result="nothing", explored=True)
+        room = Room(id=1, shape="Square", result="nothing", explored=True)
         assert room.explored is True
+
+    def test_room_with_exits(self):
+        exits = [Exit(door_number=1, destination=2, direction="north")]
+        room = Room(id=1, shape="Square", result="nothing", exits=exits)
+        assert len(room.exits) == 1
+        assert room.exits[0].destination == 2
+        assert room.exits[0].direction == "north"
 
 
 class TestCombatState:

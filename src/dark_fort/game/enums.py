@@ -50,6 +50,8 @@ class RoomEvent(StrEnum):
     WEAK_MONSTER = auto()
     TOUGH_MONSTER = auto()
     SHOP = auto()
+    ENTRANCE_ITEM = auto()
+    ENTRANCE_MYSTIC = auto()
 
 
 class MonsterSpecial(StrEnum):

@@ -1,6 +1,6 @@
 from dark_fort.game.enums import MonsterTier, Phase, RoomEvent
 from dark_fort.game.models import Player, RoomEventResult, Rope
-from dark_fort.game.rules import resolve_room_event
+from dark_fort.game.rules import resolve_entrance_event, resolve_room_event
 
 
 class TestRoomEventResult:
@@ -84,3 +84,37 @@ class TestRoomEventResult:
         player = Player(silver=10)
         resolve_room_event(RoomEvent.EMPTY, player)
         assert player.silver == 10
+
+
+class TestResolveEntranceEvent:
+    def test_entrance_item(self):
+        player = Player()
+        result = resolve_entrance_event(RoomEvent.ENTRANCE_ITEM, player)
+        assert isinstance(result, RoomEventResult)
+        assert result.explored is True
+        assert len(player.inventory) == 1
+        assert "Find a random item" in result.messages[0]
+
+    def test_entrance_weak_monster(self):
+        player = Player()
+        result = resolve_entrance_event(RoomEvent.WEAK_MONSTER, player)
+        assert isinstance(result, RoomEventResult)
+        assert result.phase == Phase.COMBAT
+        assert result.combat is not None
+        assert result.combat.monster.tier == MonsterTier.WEAK
+        assert "A weak monster stands guard" in result.messages[0]
+
+    def test_entrance_mystic(self):
+        player = Player()
+        result = resolve_entrance_event(RoomEvent.ENTRANCE_MYSTIC, player)
+        assert isinstance(result, RoomEventResult)
+        assert result.explored is True
+        assert len(player.inventory) == 1
+        assert "A dying mystic gives a random scroll" in result.messages[0]
+
+    def test_entrance_empty(self):
+        player = Player()
+        result = resolve_entrance_event(RoomEvent.EMPTY, player)
+        assert isinstance(result, RoomEventResult)
+        assert result.explored is True
+        assert "eerily quiet" in result.messages[0]

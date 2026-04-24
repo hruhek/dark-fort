@@ -11,19 +11,51 @@ class TestGameEngine:
         engine = GameEngine()
         assert engine.state.phase == "title"
 
-    def test_start_game_generates_entrance(self):
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_start_game_generates_entrance(self, _mock_roll):
         engine = GameEngine()
         result = engine.start_game()
         assert engine.state.phase == "exploring"
         assert engine.state.current_room is not None
         assert result.messages
 
-    def test_enter_new_room_generates_room(self):
+    def test_start_game_generates_dungeon_upfront(self):
         engine = GameEngine()
         engine.start_game()
-        result = engine.enter_new_room()
+        assert len(engine.state.rooms) >= 1
+        entrance = engine.state.current_room
+        assert entrance is not None
+        assert entrance.explored is True
+
+    def test_move_to_room_moves_player(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        result = engine.move_to_room(next_id)
         assert engine.state.current_room is not None
+        assert engine.state.current_room.id == next_id
         assert result.messages
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_move_to_room_explores_unexplored(self, mock_resolve):
+        from dark_fort.game.models import RoomEventResult
+
+        mock_resolve.return_value = RoomEventResult(
+            messages=["The room is empty."],
+            explored=True,
+        )
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        assert next_room.explored is False
+        engine.move_to_room(next_id)
+        assert next_room.explored is True
 
     def test_shop_purchase_deducts_silver(self):
         engine = GameEngine()
@@ -61,7 +93,7 @@ class TestGameEngine:
         engine.start_game()
         for i in range(5):
             engine.state.rooms[i] = Room(
-                id=i, shape="Square", doors=1, result="nothing", explored=True
+                id=i, shape="Square", result="nothing", explored=True
             )
         assert engine.explored_count == 5
 
@@ -234,7 +266,10 @@ class TestSaveLoad:
     def test_save_and_load_preserves_room_counter(self):
         engine = GameEngine()
         engine.start_game()
-        engine.enter_new_room()
+        # Move to a room to increment dungeon counter
+        current = engine.state.current_room
+        if current and current.exits:
+            engine.move_to_room(current.exits[0].destination)
         saved = engine.save()
         loaded = GameEngine.load(saved)
         next_room = loaded._dungeon.build_room()

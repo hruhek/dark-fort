@@ -49,7 +49,7 @@ class TestGameScreenPhaseCommands:
             assert Command.EXPLORE in cmd_bar.commands
             assert Command.INVENTORY in cmd_bar.commands
 
-    async def test_combat_phase_shows_attack_flee_use_item(self):
+    async def test_combat_phase_shows_attack_flee_inventory(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -64,7 +64,7 @@ class TestGameScreenPhaseCommands:
             cmd_bar = pilot.app.screen.query_one("#commands", CommandBar)
             assert Command.ATTACK in cmd_bar.commands
             assert Command.FLEE in cmd_bar.commands
-            assert Command.USE_ITEM in cmd_bar.commands
+            assert Command.INVENTORY in cmd_bar.commands
 
     async def test_shop_phase_shows_browse_and_leave(self):
         async with DarkFortApp().run_test() as pilot:
@@ -189,7 +189,7 @@ class TestGameScreenActions:
             await pilot.pause()
             assert True
 
-    async def test_use_item_key_shows_inventory(self):
+    async def test_inventory_key_shows_inventory_in_combat(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -209,7 +209,7 @@ class TestGameScreenActions:
             await pilot.pause()
             log = pilot.app.screen.query_one("#log")
             before_count = log.message_count  # ty: ignore[unresolved-attribute]
-            await pilot.press("u")
+            await pilot.press("i")
             await pilot.pause()
             assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
 
@@ -232,7 +232,7 @@ class TestGameScreenActions:
             await pilot.pause()
             pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
-            await pilot.press("u")  # Enter item selection mode
+            await pilot.press("i")  # Enter item selection mode
             await pilot.pause()
             await pilot.press("1")  # Use first item
             await pilot.pause()
@@ -255,7 +255,7 @@ class TestGameScreenActions:
             attack_button = pilot.app.screen.query_one("#cmd-attack")
             assert "[A]ttack" in attack_button.label.plain  # ty: ignore[unresolved-attribute]
 
-    async def test_use_item_key_shows_prompt_text(self):
+    async def test_inventory_key_shows_prompt_text(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
@@ -282,9 +282,11 @@ class TestGameScreenActions:
                 original_log(messages)
 
             pilot.app.screen._log_messages = capture_log  # ty: ignore[unresolved-attribute]
-            await pilot.press("u")
+            await pilot.press("i")
             await pilot.pause()
-            assert any("Use item: (type item number)" in m for m in captured)
+            assert any(
+                "Use item: (type item number or Esc to cancel)" in m for m in captured
+            )
 
     async def test_hp_status_bar_updates_after_combat_round(self):
         async with DarkFortApp().run_test() as pilot:
@@ -376,11 +378,82 @@ class TestGameScreenActions:
             await pilot.pause()
             pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
             pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
             pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             await pilot.press("l")
             await pilot.pause()
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
+
+    async def test_inventory_key_in_exploring_shows_items(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.inventory.clear()  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.inventory.append(  # ty: ignore[unresolved-attribute]
+                Potion(name="Potion", heal="d6")
+            )
+            log = pilot.app.screen.query_one("#log")
+            before_count = log.message_count  # ty: ignore[unresolved-attribute]
+            await pilot.press("i")
+            await pilot.pause()
+            assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
+
+    async def test_inventory_key_in_exploring_empty_shows_message(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.inventory.clear()  # ty: ignore[unresolved-attribute]
+            log = pilot.app.screen.query_one("#log")
+            before_count = log.message_count  # ty: ignore[unresolved-attribute]
+            await pilot.press("i")
+            await pilot.pause()
+            assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
+            messages = [
+                log.lines[i].text  # ty: ignore[unresolved-attribute]
+                for i in range(before_count, log.message_count)  # ty: ignore[unresolved-attribute]
+            ]
+            assert any("No items" in m for m in messages)
+
+    async def test_escape_cancels_inventory_selection_in_exploring(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.inventory.clear()  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.inventory.append(  # ty: ignore[unresolved-attribute]
+                Potion(name="Potion", heal="d6")
+            )
+            await pilot.press("i")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_item is True  # ty: ignore[unresolved-attribute]
+            await pilot.press("escape")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_item is False  # ty: ignore[unresolved-attribute]
+
+    async def test_escape_cancels_inventory_selection_in_combat(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.inventory.clear()  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.inventory.append(  # ty: ignore[unresolved-attribute]
+                Potion(name="Potion", heal="d6")
+            )
+            pilot.app.engine.state.combat = CombatState(  # ty: ignore[unresolved-attribute]
+                monster=Monster(
+                    name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+                ),
+                monster_hp=5,
+            )
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("i")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_item is True  # ty: ignore[unresolved-attribute]
+            await pilot.press("escape")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_item is False  # ty: ignore[unresolved-attribute]
 
 
 class TestShopScreen:

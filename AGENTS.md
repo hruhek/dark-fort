@@ -7,6 +7,7 @@
 - **ALWAYS** open a new branch when starting work on a new task.
 - **ALWAYS** pick the next open item from the top of `docs/backlog.md`.
 - **ALWAYS** move completed items to `docs/backlog_done.md`.
+- **ALWAYS** use TDD for new features and bug fixes — write failing test first, then make it pass.
 
 ## Commands
 

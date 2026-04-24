@@ -85,7 +85,7 @@ class Scroll(Item):
         return ""
 
     def use(self, state: GameState, index: int) -> ActionResult:
-        messages = [f"You unroll the {self.name}..."]
+        messages = [f"You unroll the {self.name}... (effect not yet implemented)"]
         state.player.inventory.pop(index)
         return ActionResult(messages=messages)
 

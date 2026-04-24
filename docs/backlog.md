@@ -1,7 +1,3 @@
-# use item from inventory
-- [ ] player should be able to use item from inventory during exploration phase
-- [ ] player should be able to exit inventory or use item screen
-
 # room exits
 - [ ] each room has exits (doors), player should be able to choose which exit he'll use
 
@@ -48,3 +44,6 @@
 
 # combat
 - [ ] some monsters have special attack that kill player (ex. medusa gaze). when that happens players should get to 0 HP and die
+
+# unified exit button/shortcut
+- [ ] leaving inventory screen or shop should have same shortcut/button

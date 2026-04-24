@@ -11,7 +11,8 @@ class TestGameEngine:
         engine = GameEngine()
         assert engine.state.phase == "title"
 
-    def test_start_game_generates_entrance(self):
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_start_game_generates_entrance(self, _mock_roll):
         engine = GameEngine()
         result = engine.start_game()
         assert engine.state.phase == "exploring"

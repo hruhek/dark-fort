@@ -49,6 +49,7 @@ class GameScreen(Screen):
 
     selecting_item: reactive[bool] = reactive(False)
     KEY_MAP: dict[str, Command] = {
+        "m": Command.MOVE,
         "i": Command.INVENTORY,
         "a": Command.ATTACK,
         "f": Command.FLEE,

@@ -507,6 +507,27 @@ class TestGameScreenActions:
             await pilot.pause()
             assert pilot.app.screen.selecting_item is False  # ty: ignore[unresolved-attribute]
 
+    async def test_exits_displayed_after_leaving_shop(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("l")
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "GameScreen"
+            log = pilot.app.screen.query_one("#log", LogView)
+            messages = [
+                log.lines[i].text
+                for i in range(max(0, log.message_count - 5), log.message_count)
+            ]
+            assert any("→" in m for m in messages), (
+                f"Expected exit info in log messages: {messages}"
+            )
+
 
 class TestShopScreen:
     async def test_shop_displays_items_on_mount(self):

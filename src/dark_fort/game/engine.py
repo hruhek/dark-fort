@@ -280,9 +280,9 @@ class GameEngine:
         self.state.shop_wares = []
         if self.state.current_room:
             self.state.current_room.explored = True
-        return ActionResult(
-            messages=["You leave the Void Peddler."], phase=Phase.EXPLORING
-        )
+        messages = ["You leave the Void Peddler."]
+        messages.extend(self.get_room_exits())
+        return ActionResult(messages=messages, phase=Phase.EXPLORING)
 
     def use_item(self, index: int) -> ActionResult:
         """Use an item from inventory."""

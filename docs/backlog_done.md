@@ -18,6 +18,9 @@
 - [x] player should be able to use item from inventory during exploration phase
 - [x] player should be able to exit inventory or use item screen
 
+# wandering the dungeon
+- [x] player will be able to wander around the dungeon choosing what door to go through in each room
+
 # room exits
 - [x] each room has exits (doors), player should be able to choose which exit he'll use
 

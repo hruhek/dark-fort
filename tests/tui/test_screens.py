@@ -39,14 +39,14 @@ class TestTitleScreen:
 class TestGameScreenPhaseCommands:
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    async def test_exploring_phase_shows_explore_and_inventory(
+    async def test_exploring_phase_shows_move_and_inventory(
         self, _mock_engine_roll, _mock_rules_roll
     ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
             cmd_bar = pilot.app.screen.query_one("#commands", CommandBar)
-            assert Command.EXPLORE in cmd_bar.commands
+            assert Command.MOVE in cmd_bar.commands
             assert Command.INVENTORY in cmd_bar.commands
 
     async def test_combat_phase_shows_attack_flee_inventory(self):
@@ -119,22 +119,21 @@ class TestGameScreenActions:
 
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    async def test_explore_button_enters_new_room(
+    async def test_digit_key_button_moves_through_exit(
         self, _mock_engine_roll, _mock_rules_roll
     ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            initial_rooms = dict(pilot.app.engine.state.rooms)  # ty: ignore[unresolved-attribute]
-            explore_button = pilot.app.screen.query_one("#cmd-explore")
-            await pilot.click(explore_button)
+            initial_room_id = pilot.app.engine.state.current_room.id  # ty: ignore[unresolved-attribute]
+            await pilot.press("1")
             await pilot.pause()
             # Room event may trigger shop (pushes ShopScreen) or combat (stays on GameScreen)
             if pilot.app.screen.__class__.__name__ == "ShopScreen":
                 await pilot.press("l")
                 await pilot.pause()
-            # Verify a new room was added
-            assert len(pilot.app.engine.state.rooms) > len(initial_rooms)  # ty: ignore[unresolved-attribute]
+            # Verify current room changed
+            assert pilot.app.engine.state.current_room.id != initial_room_id  # ty: ignore[unresolved-attribute]
 
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
@@ -363,14 +362,16 @@ class TestGameScreenActions:
 
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    async def test_e_key_triggers_explore(self, _mock_engine_roll, _mock_rules_roll):
+    async def test_digit_key_moves_through_exit(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            initial_rooms = len(pilot.app.engine.state.rooms)  # ty: ignore[unresolved-attribute]
-            await pilot.press("e")
+            initial_room_id = pilot.app.engine.state.current_room.id  # ty: ignore[unresolved-attribute]
+            await pilot.press("1")
             await pilot.pause()
-            assert len(pilot.app.engine.state.rooms) > initial_rooms  # ty: ignore[unresolved-attribute]
+            assert pilot.app.engine.state.current_room.id != initial_room_id  # ty: ignore[unresolved-attribute]
 
     async def test_l_key_triggers_leave_shop(self):
         async with DarkFortApp().run_test() as pilot:

@@ -1,6 +1,3 @@
-# room exits
-- [ ] each room has exits (doors), player should be able to choose which exit he'll use
-
 # wandering the dungeon
 - [ ] player will be able to wander around the dungeon choosing what door to go through in each room
 
@@ -47,3 +44,6 @@
 
 # unified exit button/shortcut
 - [ ] leaving inventory screen or shop should have same shortcut/button
+
+# dungeon map display
+- [ ] show a 2D map of the dungeon with rooms placed on a grid based on exit directions

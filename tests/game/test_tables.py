@@ -83,6 +83,12 @@ class TestEntranceResults:
     def test_four_entrance_results(self):
         assert len(ENTRANCE_RESULTS) == 4
 
+    def test_all_are_room_events(self):
+        from dark_fort.game.enums import RoomEvent
+
+        for entry in ENTRANCE_RESULTS:
+            assert isinstance(entry, RoomEvent)
+
 
 class TestItemsTable:
     def test_six_items(self):

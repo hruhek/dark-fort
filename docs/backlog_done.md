@@ -18,3 +18,6 @@
 - [x] player should be able to use item from inventory during exploration phase
 - [x] player should be able to exit inventory or use item screen
 
+# room exits
+- [x] each room has exits (doors), player should be able to choose which exit he'll use
+

@@ -1,3 +1,5 @@
+import random
+
 from dark_fort.game.dice import chance_in_6, roll
 from dark_fort.game.enums import MonsterSpecial, Phase, RoomEvent, ScrollType
 from dark_fort.game.models import (
@@ -15,6 +17,7 @@ from dark_fort.game.models import (
     Weapon,
 )
 from dark_fort.game.tables import (
+    ITEMS_TABLE,
     SCROLLS_TABLE,
     WEAPONS_TABLE,
     get_weak_monster,
@@ -312,6 +315,63 @@ def _resolve_soothsayer_result(
         explored=True,
         hp_delta=-damage,
     )
+
+
+def resolve_entrance_event(
+    entrance_result: RoomEvent, player: Player
+) -> RoomEventResult:
+    """Resolve an entrance room table result. Mutates player inventory directly."""
+    if entrance_result == RoomEvent.ENTRANCE_ITEM:
+        item_roll = roll("d6") - 1
+        match ITEMS_TABLE[item_roll]:
+            case "Random weapon":
+                item = random.choice(WEAPONS_TABLE)
+            case "Potion":
+                item = Potion(name="Potion", heal="d6")
+            case "Rope":
+                item = Rope(name="Rope")
+            case "Random scroll":
+                scroll_name, scroll_type, _ = random.choice(SCROLLS_TABLE)
+                item = Scroll(name=f"Scroll: {scroll_name}", scroll_type=scroll_type)
+            case "Armor":
+                item = Armor(name="Armor", absorb="d4")
+            case "Cloak of invisibility":
+                item = Cloak(name="Cloak of invisibility")
+            case _:
+                item = Potion(name="Potion", heal="d6")
+        player.inventory.append(item)
+        return RoomEventResult(
+            messages=["Find a random item", f"You find a {item.name}."],
+            explored=True,
+        )
+
+    if entrance_result == RoomEvent.WEAK_MONSTER:
+        monster = get_weak_monster(roll("d4") - 1)
+        return RoomEventResult(
+            messages=["A weak monster stands guard", f"A {monster.name} attacks!"],
+            phase=Phase.COMBAT,
+            combat=CombatState(monster=monster, monster_hp=monster.hp),
+        )
+
+    if entrance_result == RoomEvent.ENTRANCE_MYSTIC:
+        scroll_name, scroll_type, _ = random.choice(SCROLLS_TABLE)
+        scroll = Scroll(name=f"Scroll: {scroll_name}", scroll_type=scroll_type)
+        player.inventory.append(scroll)
+        return RoomEventResult(
+            messages=[
+                "A dying mystic gives a random scroll",
+                f"The mystic gives you a {scroll.name}.",
+            ],
+            explored=True,
+        )
+
+    if entrance_result == RoomEvent.EMPTY:
+        return RoomEventResult(
+            messages=["The entrance is eerily quiet"],
+            explored=True,
+        )
+
+    return RoomEventResult(messages=["Unknown entrance event."])
 
 
 def has_rope(player: Player) -> bool:

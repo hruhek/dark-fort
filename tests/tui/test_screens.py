@@ -459,6 +459,35 @@ class TestGameScreenActions:
                 f"Expected exit info in log messages: {messages}"
             )
 
+    async def test_exits_displayed_after_flee(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            monster = Monster(
+                name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+            )
+            pilot.app.engine.state.combat = CombatState(monster=monster, monster_hp=5)  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+
+            captured: list[str] = []
+            original_log = pilot.app.screen._log_messages  # ty: ignore[unresolved-attribute]
+
+            def capture_log(messages: list[str]) -> None:
+                captured.extend(messages)
+                original_log(messages)
+
+            pilot.app.screen._log_messages = capture_log  # ty: ignore[unresolved-attribute]
+
+            await pilot.press("f")
+            await pilot.pause()
+
+            assert any("→" in m for m in captured), (
+                f"Expected exit info in captured messages: {captured}"
+            )
+
     async def test_escape_cancels_inventory_selection_in_combat(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")

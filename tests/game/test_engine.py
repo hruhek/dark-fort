@@ -343,3 +343,21 @@ class TestShopWares:
         engine.state.shop_wares = list(SHOP_ITEMS)
         engine.leave_shop()
         assert engine.state.shop_wares == []
+
+
+class TestWanderingLoop:
+    def test_attack_shows_exits_after_combat_kill(self):
+        from dark_fort.game.enums import MonsterTier, Phase
+        from dark_fort.game.models import CombatState, Monster
+
+        engine = GameEngine()
+        engine.start_game()
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=1
+        )
+        engine.state.combat = CombatState(monster=monster, monster_hp=1)
+        engine.state.phase = Phase.COMBAT
+
+        result = engine.attack(player_roll=6)
+        assert result.phase == Phase.EXPLORING
+        assert any("→" in m for m in result.messages)

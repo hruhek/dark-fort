@@ -193,6 +193,8 @@ class GameEngine:
                 self.state.level_up_queue = True
                 result.messages.append("You feel power coursing through you! Level up!")
 
+            result.messages.extend(self.get_room_exits())
+
         return result
 
     def flee(self, player_roll: int | None = None) -> ActionResult:

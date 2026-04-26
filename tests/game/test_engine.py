@@ -361,3 +361,20 @@ class TestWanderingLoop:
         result = engine.attack(player_roll=6)
         assert result.phase == Phase.EXPLORING
         assert any("→" in m for m in result.messages)
+
+    def test_flee_shows_exits_after_successful_flee(self):
+        from dark_fort.game.enums import MonsterTier, Phase
+        from dark_fort.game.models import CombatState, Monster
+
+        engine = GameEngine()
+        engine.start_game()
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        engine.state.combat = CombatState(monster=monster, monster_hp=5)
+        engine.state.phase = Phase.COMBAT
+
+        # Flee with roll=1 (1 d4 damage, player has 15+ HP, survives)
+        result = engine.flee(player_roll=1)
+        assert result.phase == Phase.EXPLORING
+        assert any("→" in m for m in result.messages)

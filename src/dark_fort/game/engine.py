@@ -205,6 +205,8 @@ class GameEngine:
         result = flee_combat(self.state.player, player_roll)
         self.state.combat = None
         self.state.phase = result.phase or Phase.EXPLORING
+        if self.state.phase == Phase.EXPLORING:
+            result.messages.extend(self.get_room_exits())
         return result
 
     def buy_item(self, index: int) -> ActionResult:

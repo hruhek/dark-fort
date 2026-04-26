@@ -378,3 +378,19 @@ class TestWanderingLoop:
         result = engine.flee(player_roll=1)
         assert result.phase == Phase.EXPLORING
         assert any("→" in m for m in result.messages)
+
+    def test_leave_shop_shows_exits(self):
+        from dark_fort.game.enums import Phase
+
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+
+        engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
+
+        result = engine.leave_shop()
+        assert result.phase == Phase.EXPLORING
+        assert any("→" in m for m in result.messages)

@@ -431,6 +431,34 @@ class TestGameScreenActions:
             await pilot.pause()
             assert pilot.app.screen.selecting_item is False  # ty: ignore[unresolved-attribute]
 
+    @patch("dark_fort.game.rules.roll", return_value=2)
+    async def test_exits_displayed_after_killing_monster(self, _mock_rules_roll):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            monster = Monster(
+                name="Blood-Drenched Skeleton",
+                tier=MonsterTier.WEAK,
+                points=3,
+                damage="d4",
+                hp=1,
+            )
+            pilot.app.engine.state.combat = CombatState(monster=monster, monster_hp=1)  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+            log = pilot.app.screen.query_one("#log", LogView)
+            messages = [
+                log.lines[i].text
+                for i in range(log.message_count - 5, log.message_count)
+            ]
+            assert any("→" in m for m in messages), (
+                f"Expected exit info in log messages: {messages}"
+            )
+
     async def test_escape_cancels_inventory_selection_in_combat(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")

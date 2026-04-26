@@ -394,3 +394,52 @@ class TestWanderingLoop:
         result = engine.leave_shop()
         assert result.phase == Phase.EXPLORING
         assert any("→" in m for m in result.messages)
+
+    def test_attack_no_exits_on_game_over(self):
+        from unittest.mock import patch
+
+        from dark_fort.game.enums import MonsterTier, Phase
+        from dark_fort.game.models import ActionResult, CombatState, Monster
+
+        engine = GameEngine()
+        engine.start_game()
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        engine.state.combat = CombatState(monster=monster, monster_hp=5)
+        engine.state.phase = Phase.COMBAT
+
+        with patch(
+            "dark_fort.game.engine.resolve_combat_hit",
+            return_value=ActionResult(
+                messages=["You have fallen!"], phase=Phase.GAME_OVER
+            ),
+        ):
+            result = engine.attack()
+
+        assert engine.state.phase == Phase.GAME_OVER
+        assert not any("→" in m for m in result.messages)
+
+    def test_flee_no_exits_on_game_over(self):
+        from unittest.mock import patch
+
+        from dark_fort.game.enums import MonsterTier, Phase
+        from dark_fort.game.models import ActionResult, CombatState, Monster
+
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.hp = 1
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        engine.state.combat = CombatState(monster=monster, monster_hp=5)
+        engine.state.phase = Phase.COMBAT
+
+        with patch("dark_fort.game.engine.flee_combat") as mock_flee:
+            mock_flee.return_value = ActionResult(
+                messages=["You flee!", "You have fallen!"], phase=Phase.GAME_OVER
+            )
+            result = engine.flee()
+
+        assert engine.state.phase == Phase.GAME_OVER
+        assert not any("→" in m for m in result.messages)

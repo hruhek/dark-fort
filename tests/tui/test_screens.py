@@ -471,21 +471,15 @@ class TestGameScreenActions:
             await pilot.pause()
             pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
-
-            captured: list[str] = []
-            original_log = pilot.app.screen._log_messages  # ty: ignore[unresolved-attribute]
-
-            def capture_log(messages: list[str]) -> None:
-                captured.extend(messages)
-                original_log(messages)
-
-            pilot.app.screen._log_messages = capture_log  # ty: ignore[unresolved-attribute]
-
             await pilot.press("f")
             await pilot.pause()
-
-            assert any("→" in m for m in captured), (
-                f"Expected exit info in captured messages: {captured}"
+            log = pilot.app.screen.query_one("#log", LogView)
+            messages = [
+                log.lines[i].text
+                for i in range(log.message_count - 5, log.message_count)
+            ]
+            assert any("→" in m for m in messages), (
+                f"Expected exit info in log messages: {messages}"
             )
 
     async def test_escape_cancels_inventory_selection_in_combat(self):

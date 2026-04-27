@@ -160,7 +160,7 @@ class GameEngine:
             )
         # Entrance room always has a dungeon exit
         if room.id == 0:
-            lines.append("  0. Exit Dungeon")
+            lines.append("  0. Exit Dungeon → Explored")
         return lines
 
     def exit_dungeon(self) -> ActionResult:

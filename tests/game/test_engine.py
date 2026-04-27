@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Phase
-from dark_fort.game.models import Armor, Weapon
+from dark_fort.game.models import Armor, RoomEventResult, Weapon
 from dark_fort.game.tables import SHOP_ITEMS
 
 
@@ -103,6 +103,76 @@ class TestGameEngine:
         engine.state.player.level_benefits = [1, 2, 3, 4, 5, 6]
         engine.check_victory()
         assert engine.state.phase == Phase.VICTORY
+
+    def test_move_to_room_invalid_id_returns_error(self):
+        engine = GameEngine()
+        engine.start_game()
+        result = engine.move_to_room(9999)
+        assert engine.state.current_room is not None
+        assert "leads nowhere" in " ".join(result.messages).lower()
+
+    def test_move_to_room_already_explored(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.explored = True
+        engine.move_to_room(next_id)
+        assert next_room.explored is True
+        assert engine.state.current_room is not None
+        assert engine.state.current_room.id == next_id
+
+    def test_move_to_room_game_over_from_trap(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.result = "pending"
+        with patch("dark_fort.game.engine.resolve_room_event") as mock:
+            mock.return_value = RoomEventResult(
+                messages=["You fall in and take 6 damage!", "You have fallen!"],
+                phase=Phase.GAME_OVER,
+            )
+            result = engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.GAME_OVER
+        assert any("fallen" in m.lower() for m in result.messages)
+
+    def test_move_to_room_triggers_shop(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.result = "pending"
+        with patch("dark_fort.game.engine.resolve_room_event") as mock:
+            mock.return_value = RoomEventResult(
+                messages=["You encounter the Void Peddler."],
+                phase=Phase.SHOP,
+            )
+            result = engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.SHOP
+        assert any("void peddler" in m.lower() for m in result.messages)
+
+    def test_get_room_exits_shows_explored_status(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        exit_lines = engine.get_room_exits()
+        assert len(exit_lines) > 0
+        for line in exit_lines:
+            assert "Explored" in line or "Unexplored" in line
+            assert any(c.isdigit() for c in line.split(".")[0])
+        if current.id == 0:
+            assert any("0." in line for line in exit_lines)
 
 
 class TestEquipWeapon:

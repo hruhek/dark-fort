@@ -457,6 +457,84 @@ class TestGameScreenActions:
             assert pilot.app.screen.selecting_item is False  # ty: ignore[unresolved-attribute]
 
 
+class TestWanderingNavigation:
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_digit_zero_in_entrance_calls_exit_dungeon(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            assert pilot.app.engine.state.current_room.id == 0  # ty: ignore[unresolved-attribute]
+            log = pilot.app.screen.query_one("#log")
+            before_count = log.message_count  # ty: ignore[unresolved-attribute]
+            await pilot.press("0")
+            await pilot.pause()
+            assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
+
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_digit_key_navigates_to_room(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            initial_room_id = pilot.app.engine.state.current_room.id  # ty: ignore[unresolved-attribute]
+            await pilot.press("1")
+            await pilot.pause()
+            assert pilot.app.engine.state.current_room.id != initial_room_id  # ty: ignore[unresolved-attribute]
+
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_invalid_digit_shows_error(self, _mock_engine_roll, _mock_rules_roll):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            current_room = pilot.app.engine.state.current_room  # ty: ignore[unresolved-attribute]
+            valid_doors = {e.door_number for e in current_room.exits}
+            invalid_digit = 9
+            while invalid_digit in valid_doors:
+                invalid_digit -= 1
+            if invalid_digit <= 0:
+                invalid_digit = 5
+            log = pilot.app.screen.query_one("#log")
+            before_count = log.message_count  # ty: ignore[unresolved-attribute]
+            await pilot.press(str(invalid_digit))
+            await pilot.pause()
+            assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
+
+    async def test_digit_keys_ignored_in_combat_phase(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            initial_room_id = pilot.app.engine.state.current_room.id  # ty: ignore[unresolved-attribute]
+            monster = Monster(
+                name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+            )
+            pilot.app.engine.state.combat = CombatState(monster=monster, monster_hp=5)  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("1")
+            await pilot.pause()
+            assert pilot.app.engine.state.current_room.id == initial_room_id  # ty: ignore[unresolved-attribute]
+
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_move_command_shows_exits(self, _mock_engine_roll, _mock_rules_roll):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            log = pilot.app.screen.query_one("#log")
+            before_count = log.message_count  # ty: ignore[unresolved-attribute]
+            await pilot.press("m")
+            await pilot.pause()
+            assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
+
+
 class TestShopScreen:
     async def test_shop_displays_items_on_mount(self):
         async with DarkFortApp().run_test() as pilot:

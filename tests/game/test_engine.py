@@ -343,3 +343,186 @@ class TestShopWares:
         engine.state.shop_wares = list(SHOP_ITEMS)
         engine.leave_shop()
         assert engine.state.shop_wares == []
+
+
+class TestMoveToRoomEdgeCases:
+    def test_move_to_invalid_room_id_returns_error(self):
+        engine = GameEngine()
+        engine.start_game()
+        room_count = len(engine.state.rooms)
+        invalid_id = room_count + 100
+        result = engine.move_to_room(invalid_id)
+        assert any("nowhere" in m.lower() for m in result.messages)
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_move_to_room_already_explored_does_not_reroll(self, mock_resolve):
+        from dark_fort.game.models import RoomEventResult
+
+        mock_resolve.return_value = RoomEventResult(
+            messages=["The room is empty."],
+            explored=True,
+        )
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        engine.move_to_room(next_id)
+        assert next_room.explored is True
+        original_result = next_room.result
+        engine.move_to_room(current.id)
+        assert next_room.result == original_result
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_move_to_room_marks_explored(self, mock_resolve):
+        from dark_fort.game.models import RoomEventResult
+
+        mock_resolve.return_value = RoomEventResult(
+            messages=["The room is empty."],
+            explored=True,
+        )
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        assert next_room.explored is False
+        engine.move_to_room(next_id)
+        assert next_room.explored is True
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_move_to_room_shows_exit_info(self, mock_resolve):
+        from dark_fort.game.models import RoomEventResult
+
+        mock_resolve.return_value = RoomEventResult(
+            messages=["The room is empty."],
+            explored=True,
+        )
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        result = engine.move_to_room(next_id)
+        exit_lines = [
+            m
+            for m in result.messages
+            if "→" in m or "Unexplored" in m or "Explored" in m
+        ]
+        assert len(exit_lines) > 0
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_move_between_rooms_back_and_forth(self, mock_resolve):
+        from dark_fort.game.models import RoomEventResult
+
+        mock_resolve.return_value = RoomEventResult(
+            messages=["The room is empty."],
+            explored=True,
+        )
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.current_room is not None
+        assert engine.state.current_room.id == next_id
+        back_room = engine.state.current_room
+        assert back_room is not None
+        assert len(back_room.exits) > 0
+        back_id = back_room.exits[0].destination
+        engine.move_to_room(back_id)
+        assert engine.state.current_room is not None
+        assert engine.state.current_room.id == back_id
+
+
+class TestGetRoomExits:
+    def test_get_room_exits_returns_exit_lines(self):
+        engine = GameEngine()
+        engine.start_game()
+        exits = engine.get_room_exits()
+        assert len(exits) > 0
+        assert any("→" in e for e in exits)
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_get_room_exits_shows_explored_rooms(self, mock_resolve):
+        from dark_fort.game.models import RoomEventResult
+
+        mock_resolve.return_value = RoomEventResult(
+            messages=["The room is empty."],
+            explored=True,
+        )
+        engine = GameEngine()
+        engine.start_game()
+        entrance = engine.state.current_room
+        assert entrance is not None
+        next_id = entrance.exits[0].destination
+        engine.move_to_room(next_id)
+        engine.move_to_room(entrance.id)
+        exits_after = engine.get_room_exits()
+        explored_lines = [e for e in exits_after if "Explored" in e]
+        assert len(explored_lines) > 0
+
+    def test_get_room_exits_entrance_shows_exit_dungeon(self):
+        engine = GameEngine()
+        engine.start_game()
+        assert engine.state.current_room is not None
+        assert engine.state.current_room.id == 0
+        exits = engine.get_room_exits()
+        assert any("Exit Dungeon" in e for e in exits)
+
+    def test_get_room_exits_non_entrance_no_exit_option(self):
+        engine = GameEngine()
+        engine.start_game()
+        entrance = engine.state.current_room
+        assert entrance is not None
+        assert len(entrance.exits) > 0
+        next_id = entrance.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.current_room is not None
+        assert engine.state.current_room.id != 0
+        exits = engine.get_room_exits()
+        assert not any("Exit Dungeon" in e for e in exits)
+
+    def test_get_room_exits_no_current_room(self):
+        engine = GameEngine()
+        assert engine.state.current_room is None
+        exits = engine.get_room_exits()
+        assert exits == []
+
+
+class TestExitDungeon:
+    def test_exit_dungeon_from_entrance(self):
+        engine = GameEngine()
+        engine.start_game()
+        assert engine.state.current_room is not None
+        assert engine.state.current_room.id == 0
+        result = engine.exit_dungeon()
+        assert len(result.messages) > 0
+
+    def test_exit_dungeon_from_non_entrance(self):
+        engine = GameEngine()
+        engine.start_game()
+        entrance = engine.state.current_room
+        assert entrance is not None
+        assert len(entrance.exits) > 0
+        next_id = entrance.exits[0].destination
+        engine.move_to_room(next_id)
+        result = engine.exit_dungeon()
+        assert any(
+            "only" in m.lower() and "entrance" in m.lower() for m in result.messages
+        )
+
+    def test_exit_dungeon_no_current_room(self):
+        engine = GameEngine()
+        assert engine.state.current_room is None
+        result = engine.exit_dungeon()
+        assert any(
+            "only" in m.lower() and "entrance" in m.lower() for m in result.messages
+        )

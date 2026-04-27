@@ -164,7 +164,7 @@ class TestWanderingFlow:
             await pilot.pause()
             assert pilot.app.engine.state.current_room.id == initial_room  # ty: ignore[unresolved-attribute]
 
-    async def test_invalid_exit_number_shows_error(self):
+    async def test_invalid_exit_number_stays_in_selection_mode(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()

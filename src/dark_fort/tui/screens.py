@@ -118,6 +118,8 @@ class GameScreen(Screen):
                     if digit == 0 and current.id == 0:
                         result = self.engine.exit_dungeon()
                         self._log_messages(result.messages)
+                        self.selecting_exit = False
+                        self._update_commands()
                         return
                     for exit in current.exits:
                         if exit.door_number == digit:

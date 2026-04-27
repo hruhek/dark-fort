@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"],
+  "agent": {
+    "plan": { "model": "opencode-go/deepseek-v4-pro" },
+    "build": { "model": "opencode-go/deepseek-v4-flash" },
+    "general": { "model": "opencode-go/kimi-k2.6" },
+    "explore": { "model": "opencode-go/qwen3.6-plus" }
+  }
+}

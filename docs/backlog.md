@@ -1,5 +1,4 @@
-# wandering the dungeon
-- [ ] player will be able to wander around the dungeon choosing what door to go through in each room
+
 
 # random encounter when returning to explored room
 - [ ] when coming back to explored room, run random encounter (1-in-4 chance of Weak monster per DARK_FORT rules)

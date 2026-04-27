@@ -107,8 +107,9 @@ class TestGameEngine:
     def test_move_to_room_invalid_id_returns_error(self):
         engine = GameEngine()
         engine.start_game()
+        original_room = engine.state.current_room
         result = engine.move_to_room(9999)
-        assert engine.state.current_room is not None
+        assert engine.state.current_room is original_room
         assert "leads nowhere" in " ".join(result.messages).lower()
 
     def test_move_to_room_already_explored(self):
@@ -120,7 +121,9 @@ class TestGameEngine:
         next_id = current.exits[0].destination
         next_room = engine.state.rooms[next_id]
         next_room.explored = True
-        engine.move_to_room(next_id)
+        with patch("dark_fort.game.engine.resolve_room_event") as mock:
+            engine.move_to_room(next_id)
+            mock.assert_not_called()
         assert next_room.explored is True
         assert engine.state.current_room is not None
         assert engine.state.current_room.id == next_id
@@ -132,8 +135,6 @@ class TestGameEngine:
         assert current is not None
         assert len(current.exits) > 0
         next_id = current.exits[0].destination
-        next_room = engine.state.rooms[next_id]
-        next_room.result = "pending"
         with patch("dark_fort.game.engine.resolve_room_event") as mock:
             mock.return_value = RoomEventResult(
                 messages=["You fall in and take 6 damage!", "You have fallen!"],
@@ -150,8 +151,6 @@ class TestGameEngine:
         assert current is not None
         assert len(current.exits) > 0
         next_id = current.exits[0].destination
-        next_room = engine.state.rooms[next_id]
-        next_room.result = "pending"
         with patch("dark_fort.game.engine.resolve_room_event") as mock:
             mock.return_value = RoomEventResult(
                 messages=["You encounter the Void Peddler."],

@@ -21,3 +21,6 @@
 # room exits
 - [x] each room has exits (doors), player should be able to choose which exit he'll use
 
+# wandering the dungeon
+- [x] player will be able to wander around the dungeon choosing what door to go through in each room
+

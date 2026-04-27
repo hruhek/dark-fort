@@ -48,7 +48,6 @@ class GameScreen(Screen):
     BINDINGS = [("ctrl+q", "quit", "Quit")]
 
     selecting_item: reactive[bool] = reactive(False)
-    selecting_exit: reactive[bool] = reactive(False)
     KEY_MAP: dict[str, Command] = {
         "m": Command.MOVE,
         "i": Command.INVENTORY,
@@ -104,35 +103,6 @@ class GameScreen(Screen):
         status_bar.explored = self.engine.explored_count
 
     def on_key(self, event) -> None:
-        # Handle exit selection mode (digit keys or Escape)
-        if self.selecting_exit:
-            if event.key == "escape":
-                self.selecting_exit = False
-                self._log_messages(["Cancelled."])
-                self._update_commands()
-                return
-            if event.character and event.character.isdigit():
-                digit = int(event.character)
-                current = self.engine.state.current_room
-                if current:
-                    if digit == 0 and current.id == 0:
-                        result = self.engine.exit_dungeon()
-                        self._log_messages(result.messages)
-                        self.selecting_exit = False
-                        self._update_commands()
-                        return
-                    for exit in current.exits:
-                        if exit.door_number == digit:
-                            result = self.engine.move_to_room(exit.destination)
-                            self._log_messages(result.messages)
-                            if result.phase:
-                                self._handle_phase_change(result)
-                            self._update_commands()
-                            self._refresh_status()
-                            return
-                    self._log_messages([f"No exit number {digit}."])
-            return
-
         # Handle item selection mode (digit keys or Escape)
         if self.selecting_item:
             if event.key == "escape":
@@ -156,6 +126,32 @@ class GameScreen(Screen):
                     self._log_messages(["Invalid item number."])
             return
 
+        # Handle exit selection in exploring phase
+        if (
+            self.engine.state.phase == Phase.EXPLORING
+            and event.character
+            and event.character.isdigit()
+        ):
+            digit = int(event.character)
+            current = self.engine.state.current_room
+            if current:
+                # Dungeon exit from entrance room
+                if digit == 0 and current.id == 0:
+                    result = self.engine.exit_dungeon()
+                    self._log_messages(result.messages)
+                    return
+                for exit in current.exits:
+                    if exit.door_number == digit:
+                        result = self.engine.move_to_room(exit.destination)
+                        self._log_messages(result.messages)
+                        if result.phase:
+                            self._handle_phase_change(result)
+                        self._update_commands()
+                        self._refresh_status()
+                        return
+                self._log_messages([f"No exit number {digit}."])
+            return
+
         # Handle command shortcuts
         if event.character and event.character.lower() in self.KEY_MAP:
             key = event.character.lower()
@@ -173,11 +169,6 @@ class GameScreen(Screen):
                     self._log_messages(
                         ["Use item: (type item number or Esc to cancel)"]
                     )
-                elif command == Command.MOVE:
-                    self.selecting_exit = True
-                    self._log_messages(self.engine.get_room_exits())
-                    self._log_messages(["Pick a door number (or Esc to cancel)"])
-                    return
                 else:
                     result = self._handle_command(command.value)
                     if result:
@@ -203,11 +194,6 @@ class GameScreen(Screen):
             self._log_messages(format_inventory(self.engine.state))
             self._log_messages(["Use item: (type item number or Esc to cancel)"])
             return
-        if command == Command.MOVE:
-            self.selecting_exit = True
-            self._log_messages(self.engine.get_room_exits())
-            self._log_messages(["Pick a door number (or Esc to cancel)"])
-            return
 
         result = self._handle_command(action)
         if result:
@@ -226,7 +212,6 @@ class GameScreen(Screen):
 
     def _handle_phase_change(self, result: ActionResult) -> None:
         self.selecting_item = False
-        self.selecting_exit = False
         if result.phase == Phase.GAME_OVER:
             self.dismiss()
             self.app.push_screen(GameOverScreen(engine=self.engine))

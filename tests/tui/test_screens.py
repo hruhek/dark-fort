@@ -126,6 +126,8 @@ class TestGameScreenActions:
             await pilot.press("enter")
             await pilot.pause()
             initial_room_id = pilot.app.engine.state.current_room.id  # ty: ignore[unresolved-attribute]
+            await pilot.press("m")
+            await pilot.pause()
             await pilot.press("1")
             await pilot.pause()
             # Room event may trigger shop (pushes ShopScreen) or combat (stays on GameScreen)
@@ -369,6 +371,8 @@ class TestGameScreenActions:
             await pilot.press("enter")
             await pilot.pause()
             initial_room_id = pilot.app.engine.state.current_room.id  # ty: ignore[unresolved-attribute]
+            await pilot.press("m")
+            await pilot.pause()
             await pilot.press("1")
             await pilot.pause()
             assert pilot.app.engine.state.current_room.id != initial_room_id  # ty: ignore[unresolved-attribute]

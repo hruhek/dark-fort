@@ -78,10 +78,8 @@ class GameEngine:
             "You enter the Dark Fort...",
         ]
 
-        # Show exits before encounter so player knows their options
         if self.state.current_room:
-            exit_info = self.get_room_exits()
-            messages.extend(exit_info)
+            messages.extend(self.get_room_summary())
 
         entrance_result_idx = roll("d4") - 1
         entrance_event = ENTRANCE_RESULTS[entrance_result_idx]

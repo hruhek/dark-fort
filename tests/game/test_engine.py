@@ -335,7 +335,7 @@ class TestRoomSummary:
         engine.start_game()
         current = engine.state.current_room
         assert current is not None
-        summary = engine.room_summary_messages()
+        summary = engine.get_room_summary()
         assert any(current.shape.lower() in m.lower() for m in summary)
 
     def test_room_summary_includes_exit_lines(self):
@@ -344,7 +344,7 @@ class TestRoomSummary:
         current = engine.state.current_room
         assert current is not None
         assert len(current.exits) > 0
-        summary = engine.room_summary_messages()
+        summary = engine.get_room_summary()
         for exit in current.exits:
             assert any(exit.direction.capitalize() in m for m in summary)
 
@@ -354,7 +354,7 @@ class TestRoomSummary:
         current = engine.state.current_room
         assert current is not None
         assert current.id == 0
-        summary = engine.room_summary_messages()
+        summary = engine.get_room_summary()
         assert any("Exit Dungeon" in m for m in summary)
 
     def test_room_summary_shows_explored_status(self):
@@ -362,12 +362,24 @@ class TestRoomSummary:
         engine.start_game()
         current = engine.state.current_room
         assert current is not None
-        summary = engine.room_summary_messages()
+        summary = engine.get_room_summary()
         assert any("Explored" in m for m in summary)
+
+    def test_room_summary_shows_unexplored_status(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.explored = False
+        engine.state.current_room = next_room
+        summary = engine.get_room_summary()
+        assert any("Unexplored" in m for m in summary)
 
     def test_room_summary_no_current_room_returns_empty(self):
         engine = GameEngine()
-        assert engine.room_summary_messages() == []
+        assert engine.get_room_summary() == []
 
 
 class TestShopWares:

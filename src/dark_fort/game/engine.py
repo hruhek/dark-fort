@@ -163,6 +163,16 @@ class GameEngine:
             lines.append("  0. Exit Dungeon")
         return lines
 
+    def room_summary_messages(self) -> list[str]:
+        """Return room description + exit lines for the current room."""
+        if not self.state.current_room:
+            return []
+        room = self.state.current_room
+        status = "Explored" if room.explored else "Unexplored"
+        messages = [f"You are in a {room.shape.lower()} room — {status}"]
+        messages.extend(self.get_room_exits())
+        return messages
+
     def exit_dungeon(self) -> ActionResult:
         """Exit the dungeon from the entrance room."""
         if not self.state.current_room or self.state.current_room.id != 0:

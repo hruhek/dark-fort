@@ -329,6 +329,47 @@ class TestUseItem:
         assert len(engine.state.player.inventory) == 1
 
 
+class TestRoomSummary:
+    def test_room_summary_describes_current_room(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        summary = engine.room_summary_messages()
+        assert any(current.shape.lower() in m.lower() for m in summary)
+
+    def test_room_summary_includes_exit_lines(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        summary = engine.room_summary_messages()
+        for exit in current.exits:
+            assert any(exit.direction.capitalize() in m for m in summary)
+
+    def test_room_summary_entrance_has_exit_dungeon(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert current.id == 0
+        summary = engine.room_summary_messages()
+        assert any("Exit Dungeon" in m for m in summary)
+
+    def test_room_summary_shows_explored_status(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        summary = engine.room_summary_messages()
+        assert any("Explored" in m for m in summary)
+
+    def test_room_summary_no_current_room_returns_empty(self):
+        engine = GameEngine()
+        assert engine.room_summary_messages() == []
+
+
 class TestShopWares:
     def test_shop_wares_populated_on_shop_event(self):
         engine = GameEngine()

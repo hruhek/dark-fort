@@ -1,6 +1,5 @@
-
-
-
+# table roll helper
+- [ ] when rolling on tables use dice values `roll("d4")`, create helper function that will substract -1 to resolve table index, add get results
 
 # exit dungeon from entrance room
 - [ ] ENTRANCE ROOM should have "Exit Dungeon" option
@@ -45,3 +44,4 @@
 
 # dungeon map display
 - [ ] show a 2D map of the dungeon with rooms placed on a grid based on exit directions
+

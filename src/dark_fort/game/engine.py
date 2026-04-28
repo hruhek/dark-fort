@@ -78,10 +78,8 @@ class GameEngine:
             "You enter the Dark Fort...",
         ]
 
-        # Show exits before encounter so player knows their options
         if self.state.current_room:
-            exit_info = self.get_room_exits()
-            messages.extend(exit_info)
+            messages.extend(self.get_room_summary())
 
         entrance_result_idx = roll("d4") - 1
         entrance_event = ENTRANCE_RESULTS[entrance_result_idx]
@@ -106,23 +104,28 @@ class GameEngine:
 
         self.state.current_room = room
 
-        messages = [
-            f"You enter a {room.shape.lower()} room.",
-        ]
-
-        # Show exits before encounter so player knows their options
-        exit_info = self.get_room_exits()
-        messages.extend(exit_info)
-
         if not room.explored and room.result == "pending":
             room_result_idx = roll("d6") - 1
             room_result = ROOM_RESULTS[room_result_idx]
 
             result = resolve_room_event(room_result, self.state.player)
-            messages.extend(result.messages)
+
+            messages = [f"You enter a {room.shape.lower()} room."]
 
             if result.combat:
                 self.state.combat = result.combat
+                messages.extend(result.messages)
+                self.state.phase = Phase.COMBAT
+                return ActionResult(messages=messages, phase=Phase.COMBAT)
+
+            if result.phase == Phase.SHOP:
+                self.state.shop_wares = list(SHOP_ITEMS)
+                messages.extend(result.messages)
+                self.state.phase = Phase.SHOP
+                return ActionResult(messages=messages, phase=Phase.SHOP)
+
+            messages.extend(result.messages)
+
             if result.explored:
                 room.explored = True
             if result.silver_delta:
@@ -133,14 +136,14 @@ class GameEngine:
             final_phase = result.phase or Phase.EXPLORING
             self.state.phase = final_phase
 
-            if final_phase == Phase.SHOP:
-                self.state.shop_wares = list(SHOP_ITEMS)
-        else:
-            # Room already explored — no re-roll for now
-            # TODO: 1-in-4 weak monster check — next backlog item
-            room.explored = True
+            if final_phase == Phase.GAME_OVER:
+                return ActionResult(messages=messages, phase=Phase.GAME_OVER)
 
-        return ActionResult(messages=messages, phase=self.state.phase)
+            messages.extend(self.get_room_summary())
+            return ActionResult(messages=messages, phase=self.state.phase)
+        else:
+            room.explored = True
+            return ActionResult(messages=self.get_room_summary(), phase=Phase.EXPLORING)
 
     def get_room_exits(self) -> list[str]:
         """Return formatted exit descriptions for the current room."""
@@ -162,6 +165,17 @@ class GameEngine:
         if room.id == 0:
             lines.append("  0. Exit Dungeon")
         return lines
+
+    def get_room_summary(self) -> list[str]:
+        """Return room description + exit lines for the current room."""
+        if not self.state.current_room:
+            return []
+        room = self.state.current_room
+        status = "Explored" if room.explored else "Unexplored"
+        return [
+            f"You are in a {room.shape.lower()} room — {status}",
+            *self.get_room_exits(),
+        ]
 
     def exit_dungeon(self) -> ActionResult:
         """Exit the dungeon from the entrance room."""
@@ -193,6 +207,8 @@ class GameEngine:
                 self.state.level_up_queue = True
                 result.messages.append("You feel power coursing through you! Level up!")
 
+            result.messages.extend(self.get_room_summary())
+
         return result
 
     def flee(self, player_roll: int | None = None) -> ActionResult:
@@ -203,6 +219,8 @@ class GameEngine:
         result = flee_combat(self.state.player, player_roll)
         self.state.combat = None
         self.state.phase = result.phase or Phase.EXPLORING
+        if self.state.phase == Phase.EXPLORING:
+            result.messages.extend(self.get_room_summary())
         return result
 
     def buy_item(self, index: int) -> ActionResult:
@@ -270,9 +288,9 @@ class GameEngine:
         self.state.shop_wares = []
         if self.state.current_room:
             self.state.current_room.explored = True
-        return ActionResult(
-            messages=["You leave the Void Peddler."], phase=Phase.EXPLORING
-        )
+        messages = ["You leave the Void Peddler."]
+        messages.extend(self.get_room_summary())
+        return ActionResult(messages=messages, phase=Phase.EXPLORING)
 
     def use_item(self, index: int) -> ActionResult:
         """Use an item from inventory."""

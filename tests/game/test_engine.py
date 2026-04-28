@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
 from dark_fort.game.engine import GameEngine
-from dark_fort.game.enums import Phase
-from dark_fort.game.models import Armor, Weapon
+from dark_fort.game.enums import MonsterTier, Phase
+from dark_fort.game.models import Armor, CombatState, Monster, RoomEventResult, Weapon
 from dark_fort.game.tables import SHOP_ITEMS
 
 
@@ -327,6 +327,206 @@ class TestUseItem:
         assert cloak.charges == 2
         assert any("Cloak activated" in m for m in result.messages)
         assert len(engine.state.player.inventory) == 1
+
+
+class TestRoomSummary:
+    def test_room_summary_describes_current_room(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        summary = engine.get_room_summary()
+        assert any(current.shape.lower() in m.lower() for m in summary)
+
+    def test_room_summary_includes_exit_lines(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        summary = engine.get_room_summary()
+        for exit in current.exits:
+            assert any(exit.direction.capitalize() in m for m in summary)
+
+    def test_room_summary_entrance_has_exit_dungeon(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert current.id == 0
+        summary = engine.get_room_summary()
+        assert any("Exit Dungeon" in m for m in summary)
+
+    def test_room_summary_shows_explored_status(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        summary = engine.get_room_summary()
+        assert any("Explored" in m for m in summary)
+
+    def test_room_summary_shows_unexplored_status(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.explored = False
+        engine.state.current_room = next_room
+        summary = engine.get_room_summary()
+        assert any("Unexplored" in m for m in summary)
+
+    def test_room_summary_no_current_room_returns_empty(self):
+        engine = GameEngine()
+        assert engine.get_room_summary() == []
+
+
+class TestAutoShowRoomSummary:
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_attack_kill_shows_room_summary(self, _mock_roll):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.COMBAT
+        # Kill the monster by dealing lethal damage with a high hit roll
+        assert engine.state.combat is not None
+        engine.state.combat.monster_hp = 1
+        result = engine.attack(player_roll=6)
+        assert result.phase == Phase.EXPLORING
+        assert any("You are in a" in m for m in result.messages)
+
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_attack_no_summary_mid_combat(self, _mock_roll):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.COMBAT
+        # Low roll — miss, combat continues
+        result = engine.attack(player_roll=1)
+        assert result.phase is None or result.phase == Phase.COMBAT
+        assert not any("You are in a" in m for m in result.messages)
+
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_flee_shows_room_summary(self, _mock_roll):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.COMBAT
+        result = engine.flee(player_roll=1)
+        assert result.phase == Phase.EXPLORING
+        assert any("You are in a" in m for m in result.messages)
+
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_flee_no_summary_on_death(self, _mock_roll):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.hp = 1
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.COMBAT
+        result = engine.flee(player_roll=4)
+        assert result.phase == Phase.GAME_OVER
+        assert not any("You are in a" in m for m in result.messages)
+
+    def test_start_game_includes_room_description_header(self):
+        engine = GameEngine()
+        result = engine.start_game()
+        assert any("You are in a" in m for m in result.messages)
+
+    def test_move_to_room_game_over_no_summary(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+
+        with patch(
+            "dark_fort.game.engine.resolve_room_event",
+            return_value=RoomEventResult(
+                messages=["A pit trap! You fall to your death!"],
+                phase=Phase.GAME_OVER,
+                hp_delta=-999,
+            ),
+        ):
+            result = engine.move_to_room(next_id)
+
+        assert not any("You are in a" in m for m in result.messages)
+
+    @patch("dark_fort.game.engine.resolve_room_event")
+    def test_attack_no_room_summary_on_death(self, mock_resolve):
+        mock_resolve.return_value = RoomEventResult(
+            messages=["A goblin appears!"],
+            combat=CombatState(
+                monster=Monster(
+                    name="Goblin", tier=MonsterTier.WEAK, points=100, damage="d6", hp=5
+                ),
+                monster_hp=5,
+            ),
+        )
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert len(current.exits) > 0
+        next_id = current.exits[0].destination
+        engine.move_to_room(next_id)
+        assert engine.state.phase == Phase.COMBAT
+        # Kill the player
+        engine.state.player.hp = 1
+        engine.state.player.armor = None
+        with patch("dark_fort.game.rules.roll", return_value=10):
+            result = engine.attack(player_roll=1)
+        assert result.phase == Phase.GAME_OVER
+        assert not any("You are in a" in m for m in result.messages)
+
+    def test_leave_shop_shows_room_summary(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.phase = Phase.SHOP
+        result = engine.leave_shop()
+        assert any("You are in a" in m for m in result.messages)
+
+    def test_move_to_explored_room_shows_summary(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        next_id = current.exits[0].destination
+        # Move to adjacent room
+        engine.move_to_room(next_id)
+        current = engine.state.current_room
+        assert current is not None
+        # Find exit back to entrance
+        back_exit = None
+        for exit in current.exits:
+            if exit.destination == 0:
+                back_exit = exit
+                break
+        if back_exit is None:
+            return
+        # Mark room as explored to force explored path
+        current.explored = True
+        engine.state.phase = Phase.EXPLORING
+        engine.state.combat = None
+        result = engine.move_to_room(back_exit.destination)
+        assert any("You are in a" in m for m in result.messages)
 
 
 class TestShopWares:

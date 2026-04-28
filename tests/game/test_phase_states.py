@@ -102,10 +102,11 @@ class TestCombatPhaseState:
     def test_handle_flee_without_combat(self):
         engine = GameEngine()
         engine.start_game()
+        engine.state.combat = None
         state = CombatPhaseState()
         result = state.handle_command(engine, Command.FLEE)
         assert result is not None
-        assert "No monster to flee" in result.messages[0]
+        assert "No monster to flee from" in result.messages[0]
 
     def test_handle_inventory(self):
         engine = GameEngine()

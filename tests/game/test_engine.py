@@ -503,29 +503,54 @@ class TestAutoShowRoomSummary:
         result = engine.leave_shop()
         assert any("You are in a" in m for m in result.messages)
 
-    def test_move_to_explored_room_shows_summary(self):
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    def test_move_to_explored_room_shows_summary(self, _mock_roll):
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
         assert current is not None
         next_id = current.exits[0].destination
-        # Move to adjacent room
-        engine.move_to_room(next_id)
+        next_room = engine.state.rooms[next_id]
+        next_room.explored = True
+        engine.state.phase = Phase.EXPLORING
+        result = engine.move_to_room(next_id)
+        assert any("You are in a" in m for m in result.messages)
+        assert result.phase == Phase.EXPLORING
+
+
+class TestRandomEncounterOnReentry:
+    @patch("dark_fort.game.engine.roll")
+    def test_reenter_explored_room_triggers_weak_monster(self, mock_roll):
+        mock_roll.return_value = 4
+        engine = GameEngine()
+        engine.start_game()
         current = engine.state.current_room
         assert current is not None
-        # Find exit back to entrance
-        back_exit = None
-        for exit in current.exits:
-            if exit.destination == 0:
-                back_exit = exit
-                break
-        if back_exit is None:
-            return
-        # Mark room as explored to force explored path
-        current.explored = True
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.explored = True
         engine.state.phase = Phase.EXPLORING
-        engine.state.combat = None
-        result = engine.move_to_room(back_exit.destination)
+        mock_roll.side_effect = [1, 1]
+        result = engine.move_to_room(next_id)
+        assert result.phase == Phase.COMBAT
+        assert engine.state.combat is not None
+        assert "springs from the shadows" in result.messages[0]
+
+    @patch("dark_fort.game.engine.roll")
+    def test_reenter_explored_room_no_encounter(self, mock_roll):
+        mock_roll.return_value = 4
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        next_id = current.exits[0].destination
+        next_room = engine.state.rooms[next_id]
+        next_room.explored = True
+        engine.state.phase = Phase.EXPLORING
+        mock_roll.side_effect = [3]
+        result = engine.move_to_room(next_id)
+        assert result.phase == Phase.EXPLORING
+        assert engine.state.combat is None
         assert any("You are in a" in m for m in result.messages)
 
 

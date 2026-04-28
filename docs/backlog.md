@@ -1,7 +1,6 @@
 
 
-# random encounter when returning to explored room
-- [ ] when coming back to explored room, run random encounter (1-in-4 chance of Weak monster per DARK_FORT rules)
+
 
 # exit dungeon from entrance room
 - [ ] ENTRANCE ROOM should have "Exit Dungeon" option

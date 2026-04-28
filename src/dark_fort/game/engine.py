@@ -7,6 +7,7 @@ from dark_fort.game.models import (
     ActionResult,
     Armor,
     Cloak,
+    CombatState,
     GameState,
     Potion,
     Scroll,
@@ -24,6 +25,7 @@ from dark_fort.game.tables import (
     ENTRANCE_RESULTS,
     ROOM_RESULTS,
     SHOP_ITEMS,
+    get_weak_monster,
 )
 
 
@@ -143,6 +145,15 @@ class GameEngine:
             return ActionResult(messages=messages, phase=self.state.phase)
         else:
             room.explored = True
+            encounter_roll = roll("d4")
+            if encounter_roll == 1:
+                monster = get_weak_monster(roll("d4") - 1)
+                self.state.combat = CombatState(monster=monster, monster_hp=monster.hp)
+                self.state.phase = Phase.COMBAT
+                return ActionResult(
+                    messages=[f"A {monster.name} springs from the shadows!"],
+                    phase=Phase.COMBAT,
+                )
             return ActionResult(messages=self.get_room_summary(), phase=Phase.EXPLORING)
 
     def get_room_exits(self) -> list[str]:

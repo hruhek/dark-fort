@@ -21,6 +21,7 @@ class Phase(StrEnum):
     EXPLORING = auto()
     COMBAT = auto()
     SHOP = auto()
+    LEVEL_UP = auto()
     GAME_OVER = auto()
     VICTORY = auto()
 
@@ -34,6 +35,7 @@ class Command(StrEnum):
     BROWSE = auto()
     LEAVE = auto()
     BUY = auto()
+    EXIT_DUNGEON = auto()
 
 
 class ScrollType(StrEnum):

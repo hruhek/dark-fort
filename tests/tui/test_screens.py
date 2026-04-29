@@ -596,3 +596,130 @@ class TestGameOverScreen:
             # Check that quit binding exists
             bindings = [b[0] for b in pilot.app.screen.BINDINGS]  # ty: ignore
             assert "ctrl+q" in bindings
+
+
+class TestExitDungeon:
+    @patch("dark_fort.game.tables.roll", return_value=4)
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_digit_0_in_entrance_triggers_exit(
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            assert pilot.app.engine.state.current_room.id == 0  # ty: ignore[unresolved-attribute]
+            log = pilot.app.screen.query_one("#log", LogView)
+            before_count = log.message_count
+            await pilot.press("0")
+            await pilot.pause()
+            assert log.message_count > before_count
+
+    @patch("dark_fort.game.tables.roll", return_value=4)
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_exit_with_level_up_queue_enters_benefit_selection(
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.level_up_queue = True  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.points = 15  # ty: ignore[unresolved-attribute]
+            for i in range(12):
+                if i not in pilot.app.engine.state.rooms:  # ty: ignore[unresolved-attribute]
+                    from dark_fort.game.models import Room
+
+                    pilot.app.engine.state.rooms[i] = Room(  # ty: ignore[unresolved-attribute]
+                        id=i, shape="Square", result="nothing", explored=True
+                    )
+                else:
+                    pilot.app.engine.state.rooms[i].explored = True  # ty: ignore[unresolved-attribute]
+            await pilot.press("0")
+            await pilot.pause()
+            assert pilot.app.engine.state.phase == Phase.LEVEL_UP  # ty: ignore[unresolved-attribute]
+            assert pilot.app.screen.selecting_benefit is True  # ty: ignore[unresolved-attribute]
+
+    @patch("dark_fort.game.tables.roll", return_value=4)
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_benefit_digit_selects_benefit(
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.level_up_queue = True  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.points = 15  # ty: ignore[unresolved-attribute]
+            for i in range(12):
+                if i not in pilot.app.engine.state.rooms:  # ty: ignore[unresolved-attribute]
+                    from dark_fort.game.models import Room
+
+                    pilot.app.engine.state.rooms[i] = Room(  # ty: ignore[unresolved-attribute]
+                        id=i, shape="Square", result="nothing", explored=True
+                    )
+                else:
+                    pilot.app.engine.state.rooms[i].explored = True  # ty: ignore[unresolved-attribute]
+            await pilot.press("0")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_benefit is True  # ty: ignore[unresolved-attribute]
+            await pilot.press("1")
+            await pilot.pause()
+            assert 1 in pilot.app.engine.state.player.level_benefits  # ty: ignore[unresolved-attribute]
+            assert pilot.app.screen.selecting_benefit is False  # ty: ignore[unresolved-attribute]
+            assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
+
+    @patch("dark_fort.game.tables.roll", return_value=4)
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_escape_cancels_benefit_selection(
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.level_up_queue = True  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.points = 15  # ty: ignore[unresolved-attribute]
+            for i in range(12):
+                if i not in pilot.app.engine.state.rooms:  # ty: ignore[unresolved-attribute]
+                    from dark_fort.game.models import Room
+
+                    pilot.app.engine.state.rooms[i] = Room(  # ty: ignore[unresolved-attribute]
+                        id=i, shape="Square", result="nothing", explored=True
+                    )
+                else:
+                    pilot.app.engine.state.rooms[i].explored = True  # ty: ignore[unresolved-attribute]
+            await pilot.press("0")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_benefit is True  # ty: ignore[unresolved-attribute]
+            await pilot.press("escape")
+            await pilot.pause()
+            assert pilot.app.screen.selecting_benefit is False  # ty: ignore[unresolved-attribute]
+
+    @patch("dark_fort.game.tables.roll", return_value=4)
+    @patch("dark_fort.game.rules.roll", return_value=1)
+    @patch("dark_fort.game.engine.roll", return_value=4)
+    async def test_g_key_gives_silver_for_level_up(
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
+    ):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.silver = 50  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.points = 5  # ty: ignore[unresolved-attribute]
+            for i in range(12):
+                if i not in pilot.app.engine.state.rooms:  # ty: ignore[unresolved-attribute]
+                    from dark_fort.game.models import Room
+
+                    pilot.app.engine.state.rooms[i] = Room(  # ty: ignore[unresolved-attribute]
+                        id=i, shape="Square", result="nothing", explored=True
+                    )
+                else:
+                    pilot.app.engine.state.rooms[i].explored = True  # ty: ignore[unresolved-attribute]
+            await pilot.press("0")
+            await pilot.pause()
+            await pilot.press("g")
+            await pilot.pause()
+            assert pilot.app.engine.state.player.silver == 10  # ty: ignore[unresolved-attribute]
+            assert pilot.app.engine.state.level_up_queue is True
+            assert pilot.app.screen.selecting_benefit is True

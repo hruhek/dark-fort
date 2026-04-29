@@ -70,8 +70,21 @@ class ShopPhaseState(PhaseState):
         return None
 
 
+class LevelUpPhaseState(PhaseState):
+    phase = Phase.LEVEL_UP
+    available_commands = [Command.INVENTORY]
+
+    def handle_command(
+        self, engine: GameEngine, action: Command
+    ) -> ActionResult | None:
+        if action == Command.INVENTORY:
+            return ActionResult(messages=[])
+        return None
+
+
 PHASE_STATES: dict[Phase, PhaseState] = {
     Phase.EXPLORING: ExploringPhaseState(),
     Phase.COMBAT: CombatPhaseState(),
     Phase.SHOP: ShopPhaseState(),
+    Phase.LEVEL_UP: LevelUpPhaseState(),
 }

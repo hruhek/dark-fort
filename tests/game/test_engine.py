@@ -582,3 +582,169 @@ class TestShopWares:
         engine.state.shop_wares = list(SHOP_ITEMS)
         engine.leave_shop()
         assert engine.state.shop_wares == []
+
+
+class TestExitDungeon:
+    def test_exit_dungeon_only_from_entrance(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        if current.exits:
+            engine.move_to_room(current.exits[0].destination)
+        result = engine.exit_dungeon()
+        assert any("only exit from the entrance" in m.lower() for m in result.messages)
+
+    def test_exit_dungeon_level_up_available_shows_benefits(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.points = 15
+        engine.state.level_up_queue = True
+        for i in range(12):
+            if i not in engine.state.rooms:
+                from dark_fort.game.models import Room
+
+                engine.state.rooms[i] = Room(
+                    id=i, shape="Square", result="nothing", explored=True
+                )
+            else:
+                engine.state.rooms[i].explored = True
+        result = engine.exit_dungeon()
+        assert any("level up" in m.lower() for m in result.messages)
+        assert result.phase == Phase.LEVEL_UP
+
+    def test_exit_dungeon_gold_for_level_up(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.silver = 40
+        engine.state.player.points = 5
+        engine.state.level_up_queue = False
+        for i in range(12):
+            if i not in engine.state.rooms:
+                from dark_fort.game.models import Room
+
+                engine.state.rooms[i] = Room(
+                    id=i, shape="Square", result="nothing", explored=True
+                )
+            else:
+                engine.state.rooms[i].explored = True
+        result = engine.exit_dungeon()
+        assert any("40 silver" in m or "give" in m.lower() for m in result.messages)
+
+    def test_exit_dungeon_no_conditions_simple_exit(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.points = 5
+        engine.state.player.silver = 10
+        engine.state.level_up_queue = False
+        result = engine.exit_dungeon()
+        assert any("leave" in m.lower() for m in result.messages)
+
+    def test_exit_dungeon_gold_level_up_deducts_silver(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.silver = 50
+        engine.state.player.points = 5
+        engine.state.level_up_queue = False
+        for i in range(12):
+            if i not in engine.state.rooms:
+                from dark_fort.game.models import Room
+
+                engine.state.rooms[i] = Room(
+                    id=i, shape="Square", result="nothing", explored=True
+                )
+            else:
+                engine.state.rooms[i].explored = True
+        result = engine.exit_dungeon(give_silver=True)
+        assert engine.state.player.silver == 10
+        assert engine.state.level_up_queue is True
+        assert result.phase == Phase.LEVEL_UP
+
+    def test_exit_dungeon_gold_level_up_refused(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.silver = 50
+        engine.state.player.points = 5
+        engine.state.level_up_queue = False
+        for i in range(12):
+            if i not in engine.state.rooms:
+                from dark_fort.game.models import Room
+
+                engine.state.rooms[i] = Room(
+                    id=i, shape="Square", result="nothing", explored=True
+                )
+            else:
+                engine.state.rooms[i].explored = True
+        result = engine.exit_dungeon(give_silver=False)
+        assert engine.state.player.silver == 50
+        assert engine.state.level_up_queue is False
+        assert any("leave" in m.lower() for m in result.messages)
+
+
+class TestPointsCapWhenLevelUpQueued:
+    def test_points_not_accumulated_when_queue_is_set(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.level_up_queue = True
+        engine.state.player.points = 15
+        current = engine.state.current_room
+        assert current is not None
+        assert current.exits
+        next_id = current.exits[0].destination
+        with patch(
+            "dark_fort.game.engine.resolve_room_event",
+            return_value=RoomEventResult(
+                messages=["A skeleton appears!"],
+                phase=Phase.COMBAT,
+                combat=CombatState(
+                    monster=Monster(
+                        name="Test", tier=MonsterTier.WEAK, points=3, damage="d4", hp=1
+                    ),
+                    monster_hp=1,
+                ),
+            ),
+        ):
+            engine.move_to_room(next_id)
+        assert engine.state.combat is not None
+        engine.state.combat.monster_hp = 1
+        with patch("dark_fort.game.rules.roll", return_value=6):
+            engine.attack(player_roll=6)
+        assert engine.state.player.points == 15
+
+    def test_level_up_queue_message_after_kill(self):
+        engine = GameEngine()
+        engine.start_game()
+        current = engine.state.current_room
+        assert current is not None
+        assert current.exits
+        next_id = current.exits[0].destination
+        with patch(
+            "dark_fort.game.engine.resolve_room_event",
+            return_value=RoomEventResult(
+                messages=["A skeleton appears!"],
+                phase=Phase.COMBAT,
+                combat=CombatState(
+                    monster=Monster(
+                        name="Test", tier=MonsterTier.WEAK, points=3, damage="d4", hp=1
+                    ),
+                    monster_hp=1,
+                ),
+            ),
+        ):
+            engine.move_to_room(next_id)
+        assert engine.state.combat is not None
+        engine.state.combat.monster_hp = 1
+        engine.state.player.points = 12
+        for i in range(12):
+            if i not in engine.state.rooms:
+                from dark_fort.game.models import Room
+
+                engine.state.rooms[i] = Room(
+                    id=i, shape="Square", result="nothing", explored=True
+                )
+            else:
+                engine.state.rooms[i].explored = True
+        with patch("dark_fort.game.rules.roll", return_value=6):
+            result = engine.attack(player_roll=6)
+        assert engine.state.level_up_queue is True
+        assert any("entrance" in m.lower() for m in result.messages)

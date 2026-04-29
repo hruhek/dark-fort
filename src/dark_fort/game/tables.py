@@ -1,3 +1,4 @@
+from dark_fort.game.dice import roll
 from dark_fort.game.enums import (
     MonsterSpecial,
     MonsterTier,
@@ -232,12 +233,10 @@ LEVEL_BENEFITS: list[str] = [
 # ---------------------------------------------------------------------------
 
 
-def get_weak_monster(index: int) -> Monster:
-    return WEAK_MONSTERS[index % len(WEAK_MONSTERS)]
-
-
-def get_tough_monster(index: int) -> Monster:
-    return TOUGH_MONSTERS[index % len(TOUGH_MONSTERS)]
+def roll_on_table[T](table: list[T], dice_expr: str) -> T:
+    """Roll dice and use result as 1-based index into table."""
+    idx = roll(dice_expr) - 1
+    return table[idx]
 
 
 def get_shop_item(index: int) -> ShopEntry:

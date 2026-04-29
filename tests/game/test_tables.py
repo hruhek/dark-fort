@@ -1,3 +1,7 @@
+from unittest.mock import patch
+
+import pytest
+
 from dark_fort.game.enums import MonsterTier
 from dark_fort.game.tables import (
     ARMOR_TABLE,
@@ -13,9 +17,43 @@ from dark_fort.game.tables import (
     WEAPONS_TABLE,
     get_room_shape,
     get_shop_item,
-    get_tough_monster,
-    get_weak_monster,
+    roll_on_table,
 )
+
+
+class TestRollOnTable:
+    @patch("dark_fort.game.tables.roll", return_value=1)
+    def test_returns_first_element_when_roll_is_1(self, _mock_roll):
+        result = roll_on_table(WEAK_MONSTERS, "d4")
+        assert result.name == "Blood-Drenched Skeleton"
+
+    @patch("dark_fort.game.tables.roll", return_value=4)
+    def test_returns_last_element_when_roll_equals_length(self, _mock_roll):
+        result = roll_on_table(WEAK_MONSTERS, "d4")
+        assert result.name == "Undead Hound"
+
+    @patch("dark_fort.game.tables.roll", return_value=2)
+    def test_returns_second_element(self, _mock_roll):
+        result = roll_on_table(WEAPONS_TABLE, "d4")
+        assert result.name == "Dagger"
+
+    def test_raises_index_error_when_out_of_bounds(self):
+        with (
+            patch("dark_fort.game.tables.roll", return_value=99),
+            pytest.raises(IndexError),
+        ):
+            roll_on_table(WEAK_MONSTERS, "d4")
+
+    @patch("dark_fort.game.tables.roll", return_value=3)
+    def test_works_with_string_tables(self, _mock_roll):
+        table = ["a", "b", "c", "d"]
+        result = roll_on_table(table, "d4")
+        assert result == "c"
+
+    @patch("dark_fort.game.tables.roll", return_value=1)
+    def test_works_with_enum_tables(self, _mock_roll):
+        result = roll_on_table(ROOM_RESULTS, "d6")
+        assert result == ROOM_RESULTS[0]
 
 
 class TestWeakMonsters:
@@ -30,10 +68,6 @@ class TestWeakMonsters:
             assert m.damage
             assert m.hp > 0
 
-    def test_get_weak_monster_by_index(self):
-        monster = get_weak_monster(0)
-        assert monster.name == "Blood-Drenched Skeleton"
-
 
 class TestToughMonsters:
     def test_four_tough_monsters(self):
@@ -46,10 +80,6 @@ class TestToughMonsters:
             assert m.points > 0
             assert m.damage
             assert m.hp > 0
-
-    def test_get_tough_monster_by_index(self):
-        monster = get_tough_monster(0)
-        assert monster.name == "Necro-Sorcerer"
 
 
 class TestShopItems:

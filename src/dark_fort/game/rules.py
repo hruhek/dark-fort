@@ -1,5 +1,3 @@
-import random
-
 from dark_fort.game.dice import chance_in_6, roll
 from dark_fort.game.enums import MonsterSpecial, Phase, RoomEvent, ScrollType
 from dark_fort.game.models import (
@@ -19,17 +17,15 @@ from dark_fort.game.models import (
 from dark_fort.game.tables import (
     ITEMS_TABLE,
     SCROLLS_TABLE,
+    WEAK_MONSTERS,
     WEAPONS_TABLE,
-    get_weak_monster,
+    roll_on_table,
 )
 
 
 def generate_starting_equipment() -> tuple[Weapon, Armor | Potion | Scroll | Cloak]:
     """Roll 1d4 on the weapon table and 1d4 on the item table."""
-    weapon_idx = roll("d4") - 1
-    item_idx = roll("d4") - 1
-
-    weapon = WEAPONS_TABLE[weapon_idx]
+    weapon = roll_on_table(WEAPONS_TABLE, "d4")
 
     item_table: list[Armor | Potion | Scroll | Cloak] = [
         Armor(name="Armor", absorb="d4"),
@@ -37,7 +33,7 @@ def generate_starting_equipment() -> tuple[Weapon, Armor | Potion | Scroll | Clo
         Scroll(name="Scroll: Summon weak daemon", scroll_type=ScrollType.SUMMON_DAEMON),
         Cloak(name="Cloak of invisibility"),
     ]
-    item = item_table[item_idx]
+    item = roll_on_table(item_table, "d4")
 
     return weapon, item
 
@@ -127,7 +123,7 @@ def _resolve_loot(monster: Monster, player: Player, messages: list[str]) -> None
         player.inventory.append(Weapon(name="Dagger", damage="d4", attack_bonus=1))
         messages.append("Loot: Dagger")
     elif monster.special == MonsterSpecial.LOOT_SCROLL and chance_in_6(2):
-        scroll_name, scroll_type, _ = SCROLLS_TABLE[roll("d4") - 1]
+        scroll_name, scroll_type, _ = roll_on_table(SCROLLS_TABLE, "d4")
         player.inventory.append(Scroll(name=scroll_name, scroll_type=scroll_type))
         messages.append("Loot: Random scroll")
     elif monster.special == MonsterSpecial.LOOT_ROPE and chance_in_6(2):
@@ -228,7 +224,7 @@ def resolve_room_event(
         return _resolve_soothsayer_result(player, dice_roll)
 
     if room_result == RoomEvent.WEAK_MONSTER:
-        monster = get_weak_monster(roll("d4") - 1)
+        monster = roll_on_table(WEAK_MONSTERS, "d4")
         return RoomEventResult(
             messages=[f"A {monster.name} stands guard! Attack!"],
             phase=Phase.COMBAT,
@@ -236,9 +232,9 @@ def resolve_room_event(
         )
 
     if room_result == RoomEvent.TOUGH_MONSTER:
-        from dark_fort.game.tables import get_tough_monster
+        from dark_fort.game.tables import TOUGH_MONSTERS
 
-        monster = get_tough_monster(roll("d4") - 1)
+        monster = roll_on_table(TOUGH_MONSTERS, "d4")
         return RoomEventResult(
             messages=[f"A {monster.name} blocks your path! Attack!"],
             phase=Phase.COMBAT,
@@ -322,16 +318,15 @@ def resolve_entrance_event(
 ) -> RoomEventResult:
     """Resolve an entrance room table result. Mutates player inventory directly."""
     if entrance_result == RoomEvent.ENTRANCE_ITEM:
-        item_roll = roll("d6") - 1
-        match ITEMS_TABLE[item_roll]:
+        match roll_on_table(ITEMS_TABLE, "d6"):
             case "Random weapon":
-                item = random.choice(WEAPONS_TABLE)
+                item = roll_on_table(WEAPONS_TABLE, "d4")
             case "Potion":
                 item = Potion(name="Potion", heal="d6")
             case "Rope":
                 item = Rope(name="Rope")
             case "Random scroll":
-                scroll_name, scroll_type, _ = random.choice(SCROLLS_TABLE)
+                scroll_name, scroll_type, _ = roll_on_table(SCROLLS_TABLE, "d4")
                 item = Scroll(name=f"Scroll: {scroll_name}", scroll_type=scroll_type)
             case "Armor":
                 item = Armor(name="Armor", absorb="d4")
@@ -346,7 +341,7 @@ def resolve_entrance_event(
         )
 
     if entrance_result == RoomEvent.WEAK_MONSTER:
-        monster = get_weak_monster(roll("d4") - 1)
+        monster = roll_on_table(WEAK_MONSTERS, "d4")
         return RoomEventResult(
             messages=["A weak monster stands guard", f"A {monster.name} attacks!"],
             phase=Phase.COMBAT,
@@ -354,7 +349,7 @@ def resolve_entrance_event(
         )
 
     if entrance_result == RoomEvent.ENTRANCE_MYSTIC:
-        scroll_name, scroll_type, _ = random.choice(SCROLLS_TABLE)
+        scroll_name, scroll_type, _ = roll_on_table(SCROLLS_TABLE, "d4")
         scroll = Scroll(name=f"Scroll: {scroll_name}", scroll_type=scroll_type)
         player.inventory.append(scroll)
         return RoomEventResult(

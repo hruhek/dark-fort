@@ -18,10 +18,11 @@ class TestTitleScreen:
             log = pilot.app.screen.query_one("#log")
             assert log.message_count > 0  # ty: ignore[unresolved-attribute]
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
     async def test_starting_game_sets_exploring_phase(
-        self, _mock_engine_roll, _mock_rules_roll
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
     ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
@@ -37,10 +38,11 @@ class TestTitleScreen:
 
 
 class TestGameScreenPhaseCommands:
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
     async def test_exploring_phase_shows_move_and_inventory(
-        self, _mock_engine_roll, _mock_rules_roll
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
     ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
@@ -117,10 +119,11 @@ class TestGameScreenActions:
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
             assert pilot.app.engine.state.combat is None  # ty: ignore[unresolved-attribute]
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
     async def test_digit_key_button_moves_through_exit(
-        self, _mock_engine_roll, _mock_rules_roll
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
     ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
@@ -360,10 +363,11 @@ class TestGameScreenActions:
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
             assert pilot.app.engine.state.player.hp < initial_hp  # ty: ignore[unresolved-attribute]
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
     async def test_digit_key_moves_through_exit(
-        self, _mock_engine_roll, _mock_rules_roll
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
     ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")

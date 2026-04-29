@@ -30,3 +30,16 @@
 # random encounter when returning to explored room
 - [x] when coming back to explored room, run random encounter (1-in-4 chance of Weak monster per DARK_FORT rules)
 
+# exit dungeon from entrance room
+- [x] ENTRANCE ROOM should have "Exit Dungeon" option
+- [x] to leave dungeon and level up, player needs to return to ENTRANCE ROOM
+- [x] if user has enough gold when he exits dungeon add option to give gold away for level up
+
+# exit the dungeon for level up
+- [x] when player has enough points (15) and explored rooms (12), add message to exit dungeon and level up in ENTRANCE ROOM
+
+# leveling up
+- [x] check that each level up option can be used only one
+- [x] apply level up benefits to player character
+- [x] when player has enough points, or explored rooms, it should stop accumulating them until the player leaves the dungeon and levels up
+

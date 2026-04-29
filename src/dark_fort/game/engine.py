@@ -23,17 +23,12 @@ from dark_fort.game.rules import (
 )
 from dark_fort.game.tables import (
     ENTRANCE_RESULTS,
+    LEVEL_BENEFITS,
     ROOM_RESULTS,
     SHOP_ITEMS,
     WEAK_MONSTERS,
     roll_on_table,
 )
-
-
-def _get_benefit_name(number: int) -> str:
-    from dark_fort.game.tables import LEVEL_BENEFITS
-
-    return LEVEL_BENEFITS[number - 1]
 
 
 class GameEngine:
@@ -187,21 +182,52 @@ class GameEngine:
             *self.get_room_exits(),
         ]
 
-    def exit_dungeon(self) -> ActionResult:
+    def exit_dungeon(self, give_silver: bool = False) -> ActionResult:
         """Exit the dungeon from the entrance room."""
         if not self.state.current_room or self.state.current_room.id != 0:
             return ActionResult(messages=["You can only exit from the entrance room."])
-        # TODO: level up check, generate next dungeon — future backlog items
-        return ActionResult(
-            messages=[
-                "You leave the Dark Fort. (Level up and next dungeon coming soon!)"
+
+        if self.state.level_up_queue:
+            messages = [
+                "You leave the Dark Fort, ready to level up!",
+                "Choose a benefit (1-6):",
             ]
-        )
+            for i, name in enumerate(LEVEL_BENEFITS, 1):
+                if i not in self.state.player.level_benefits:
+                    messages.append(f"  {i}. {name}")
+            self.state.phase = Phase.LEVEL_UP
+            return ActionResult(messages=messages, phase=Phase.LEVEL_UP)
+
+        explored = self.explored_count
+        if self.state.player.silver >= 40 and explored >= 12:
+            if give_silver:
+                self.state.player.silver -= 40
+                self.state.level_up_queue = True
+                messages = [
+                    "You give 40 silver to the poor of ruined Wästland.",
+                    "You feel power coursing through you! Level up!",
+                    "Choose a benefit (1-6):",
+                ]
+                for i, name in enumerate(LEVEL_BENEFITS, 1):
+                    if i not in self.state.player.level_benefits:
+                        messages.append(f"  {i}. {name}")
+                self.state.phase = Phase.LEVEL_UP
+                return ActionResult(messages=messages, phase=Phase.LEVEL_UP)
+            messages = [
+                f"You have {self.state.player.silver}s. Give 40 silver to the poor of ruined Wästland to level up? (Press G to give, or 0 to leave)",
+            ]
+            return ActionResult(messages=messages)
+
+        messages = ["You leave the Dark Fort."]
+        return ActionResult(messages=messages)
 
     def attack(self, player_roll: int | None = None) -> ActionResult:
         """Attack the current monster."""
         if not self.state.combat:
             return ActionResult(messages=["No monster to attack."])
+
+        queued_before = self.state.level_up_queue
+        points_before = self.state.player.points
 
         result = resolve_combat_hit(self.state.player, self.state.combat, player_roll)
 
@@ -213,9 +239,15 @@ class GameEngine:
                 self.state.current_room.explored = True
             self.state.phase = Phase.EXPLORING
 
-            if check_level_up(self.state):
+            if queued_before:
+                self.state.player.points = points_before
+                result.messages.append("Return to the entrance room to level up!")
+
+            if check_level_up(self.state) and not queued_before:
                 self.state.level_up_queue = True
-                result.messages.append("You feel power coursing through you! Level up!")
+                result.messages.append(
+                    "You feel power coursing through you! Return to the entrance to level up!"
+                )
 
             result.messages.extend(self.get_room_summary())
 
@@ -338,7 +370,7 @@ class GameEngine:
         apply_level_benefit(benefit_number, self.state.player)
         self.state.player.level_benefits.append(benefit_number)
 
-        messages = [f"Benefit: {_get_benefit_name(benefit_number)}"]
+        messages = [f"Benefit: {LEVEL_BENEFITS[benefit_number - 1]}"]
 
         if len(self.state.player.level_benefits) >= 6:
             messages.append("All benefits claimed! You retire victorious!")
@@ -346,7 +378,10 @@ class GameEngine:
             return ActionResult(messages=messages, phase=Phase.VICTORY)
 
         self.state.level_up_queue = False
-        return ActionResult(messages=messages)
+        self.state.phase = Phase.EXPLORING
+        messages.append("You return to the Dark Fort, stronger than before.")
+        messages.extend(self.get_room_summary())
+        return ActionResult(messages=messages, phase=Phase.EXPLORING)
 
     def save(self) -> dict:
         return {

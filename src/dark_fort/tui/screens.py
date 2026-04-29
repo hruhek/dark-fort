@@ -48,6 +48,7 @@ class GameScreen(Screen):
     BINDINGS = [("ctrl+q", "quit", "Quit")]
 
     selecting_item: reactive[bool] = reactive(False)
+    selecting_benefit: reactive[bool] = reactive(False)
     KEY_MAP: dict[str, Command] = {
         "m": Command.MOVE,
         "i": Command.INVENTORY,
@@ -103,6 +104,26 @@ class GameScreen(Screen):
         status_bar.explored = self.engine.explored_count
 
     def on_key(self, event) -> None:
+        if self.selecting_benefit:
+            if event.key == "escape":
+                self.selecting_benefit = False
+                self._log_messages(["Benefit selection cancelled."])
+                self._update_commands()
+                return
+            if event.character and event.character.isdigit():
+                digit = int(event.character)
+                if 1 <= digit <= 6:
+                    result = self.engine.level_up(digit)
+                    self._log_messages(result.messages)
+                    self.selecting_benefit = False
+                    if result.phase:
+                        self._handle_phase_change(result)
+                    self._update_commands()
+                    self._refresh_status()
+                else:
+                    self._log_messages(["Choose a benefit number 1-6."])
+            return
+
         # Handle item selection mode (digit keys or Escape)
         if self.selecting_item:
             if event.key == "escape":
@@ -139,6 +160,11 @@ class GameScreen(Screen):
                 if digit == 0 and current.id == 0:
                     result = self.engine.exit_dungeon()
                     self._log_messages(result.messages)
+                    if result.phase == Phase.LEVEL_UP:
+                        self.selecting_benefit = True
+                        self._update_commands()
+                    self._update_commands()
+                    self._refresh_status()
                     return
                 for exit in current.exits:
                     if exit.door_number == digit:
@@ -151,6 +177,22 @@ class GameScreen(Screen):
                         return
                 self._log_messages([f"No exit number {digit}."])
             return
+
+        # Handle G key for giving silver at entrance exit prompt
+        if (
+            self.engine.state.phase == Phase.EXPLORING
+            and event.character
+            and event.character.lower() == "g"
+        ):
+            current = self.engine.state.current_room
+            if current and current.id == 0 and self.engine.state.player.silver >= 40:
+                result = self.engine.exit_dungeon(give_silver=True)
+                self._log_messages(result.messages)
+                if result.phase == Phase.LEVEL_UP:
+                    self.selecting_benefit = True
+                self._update_commands()
+                self._refresh_status()
+                return
 
         # Handle command shortcuts
         if event.character and event.character.lower() in self.KEY_MAP:
@@ -212,6 +254,7 @@ class GameScreen(Screen):
 
     def _handle_phase_change(self, result: ActionResult) -> None:
         self.selecting_item = False
+        self.selecting_benefit = False
         if result.phase == Phase.GAME_OVER:
             self.dismiss()
             self.app.push_screen(GameOverScreen(engine=self.engine))

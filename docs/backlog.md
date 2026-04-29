@@ -1,16 +1,3 @@
-# exit dungeon from entrance room
-- [ ] ENTRANCE ROOM should have "Exit Dungeon" option
-- [ ] to leave dungeon and level up, player needs to return to ENTRANCE ROOM
-- [ ] if user has enough gold when he exits dungeon add option to give gold away for level up
-
-# exit the dungeon for level up
-- [ ] when player has enough points (15) and explored rooms (12), add message to exit dungeon and level up in ENTRANCE ROOM
-
-# leveling up
-- [ ] check that each level up option can be used only one
-- [ ] apply level up benefits to player character
-- [ ] when player has enough points, or explored rooms, it should stop accumulating them until the player leaves the dungeon and levels up
-
 # save/load
 - [ ] add save/load game feature
 
@@ -35,6 +22,7 @@
 
 # combat
 - [ ] some monsters have special attack that kill player (ex. medusa gaze). when that happens players should get to 0 HP and die
+- [ ] when necro sorcerer death ray turns player into maggot, game should be over immediately
 
 # unified exit button/shortcut
 - [ ] leaving inventory screen or shop should have same shortcut/button

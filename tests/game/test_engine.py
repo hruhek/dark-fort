@@ -11,8 +11,9 @@ class TestGameEngine:
         engine = GameEngine()
         assert engine.state.phase == "title"
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    def test_start_game_generates_entrance(self, _mock_roll):
+    def test_start_game_generates_entrance(self, _mock_engine_roll, _mock_tables_roll):
         engine = GameEngine()
         result = engine.start_game()
         assert engine.state.phase == "exploring"
@@ -238,9 +239,12 @@ class TestEquipSwapIntegration:
 
 
 class TestSaveLoad:
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    def test_save_and_load_preserves_state(self, _mock_engine_roll, _mock_rules_roll):
+    def test_save_and_load_preserves_state(
+        self, _mock_engine_roll, _mock_rules_roll, _mock_tables_roll
+    ):
         engine = GameEngine()
         engine.start_game()
         engine.state.player.silver = 42
@@ -383,8 +387,9 @@ class TestRoomSummary:
 
 
 class TestAutoShowRoomSummary:
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    def test_attack_kill_shows_room_summary(self, _mock_roll):
+    def test_attack_kill_shows_room_summary(self, _mock_engine_roll, _mock_tables_roll):
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
@@ -400,8 +405,9 @@ class TestAutoShowRoomSummary:
         assert result.phase == Phase.EXPLORING
         assert any("You are in a" in m for m in result.messages)
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    def test_attack_no_summary_mid_combat(self, _mock_roll):
+    def test_attack_no_summary_mid_combat(self, _mock_engine_roll, _mock_tables_roll):
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
@@ -415,8 +421,9 @@ class TestAutoShowRoomSummary:
         assert result.phase is None or result.phase == Phase.COMBAT
         assert not any("You are in a" in m for m in result.messages)
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    def test_flee_shows_room_summary(self, _mock_roll):
+    def test_flee_shows_room_summary(self, _mock_engine_roll, _mock_tables_roll):
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
@@ -429,8 +436,9 @@ class TestAutoShowRoomSummary:
         assert result.phase == Phase.EXPLORING
         assert any("You are in a" in m for m in result.messages)
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    def test_flee_no_summary_on_death(self, _mock_roll):
+    def test_flee_no_summary_on_death(self, _mock_engine_roll, _mock_tables_roll):
         engine = GameEngine()
         engine.start_game()
         engine.state.player.hp = 1
@@ -519,9 +527,12 @@ class TestAutoShowRoomSummary:
 
 
 class TestRandomEncounterOnReentry:
+    @patch("dark_fort.game.tables.roll", return_value=1)
     @patch("dark_fort.game.engine.roll")
-    def test_reenter_explored_room_triggers_weak_monster(self, mock_roll):
-        mock_roll.return_value = 4
+    def test_reenter_explored_room_triggers_weak_monster(
+        self, mock_engine_roll, _mock_tables_roll
+    ):
+        mock_engine_roll.return_value = 4
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
@@ -530,15 +541,18 @@ class TestRandomEncounterOnReentry:
         next_room = engine.state.rooms[next_id]
         next_room.explored = True
         engine.state.phase = Phase.EXPLORING
-        mock_roll.side_effect = [1, 1]
+        mock_engine_roll.side_effect = [1, 1]
         result = engine.move_to_room(next_id)
         assert result.phase == Phase.COMBAT
         assert engine.state.combat is not None
         assert "springs from the shadows" in result.messages[0]
 
+    @patch("dark_fort.game.tables.roll", return_value=4)
     @patch("dark_fort.game.engine.roll")
-    def test_reenter_explored_room_no_encounter(self, mock_roll):
-        mock_roll.return_value = 4
+    def test_reenter_explored_room_no_encounter(
+        self, mock_engine_roll, _mock_tables_roll
+    ):
+        mock_engine_roll.return_value = 4
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
@@ -547,7 +561,7 @@ class TestRandomEncounterOnReentry:
         next_room = engine.state.rooms[next_id]
         next_room.explored = True
         engine.state.phase = Phase.EXPLORING
-        mock_roll.side_effect = [3]
+        mock_engine_roll.side_effect = [3]
         result = engine.move_to_room(next_id)
         assert result.phase == Phase.EXPLORING
         assert engine.state.combat is None

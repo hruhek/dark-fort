@@ -1,6 +1,3 @@
-# table roll helper
-- [ ] when rolling on tables use dice values `roll("d4")`, create helper function that will substract -1 to resolve table index, add get results
-
 # exit dungeon from entrance room
 - [ ] ENTRANCE ROOM should have "Exit Dungeon" option
 - [ ] to leave dungeon and level up, player needs to return to ENTRANCE ROOM

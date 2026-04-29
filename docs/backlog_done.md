@@ -1,3 +1,6 @@
+# table roll helper
+- [x] when rolling on tables use dice values `roll("d4")`, create helper function that will substract -1 to resolve table index, add get results
+
 # Use item
 - [x] there is message Use Item: (type item number)
 - [x] we are missing item list and using of selected item

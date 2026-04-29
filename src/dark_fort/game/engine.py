@@ -25,7 +25,8 @@ from dark_fort.game.tables import (
     ENTRANCE_RESULTS,
     ROOM_RESULTS,
     SHOP_ITEMS,
-    get_weak_monster,
+    WEAK_MONSTERS,
+    roll_on_table,
 )
 
 
@@ -83,8 +84,7 @@ class GameEngine:
         if self.state.current_room:
             messages.extend(self.get_room_summary())
 
-        entrance_result_idx = roll("d4") - 1
-        entrance_event = ENTRANCE_RESULTS[entrance_result_idx]
+        entrance_event = roll_on_table(ENTRANCE_RESULTS, "d4")
         result = resolve_entrance_event(entrance_event, self.state.player)
         messages.extend(result.messages)
 
@@ -107,8 +107,7 @@ class GameEngine:
         self.state.current_room = room
 
         if not room.explored and room.result == "pending":
-            room_result_idx = roll("d6") - 1
-            room_result = ROOM_RESULTS[room_result_idx]
+            room_result = roll_on_table(ROOM_RESULTS, "d6")
 
             result = resolve_room_event(room_result, self.state.player)
 
@@ -147,7 +146,7 @@ class GameEngine:
             room.explored = True
             encounter_roll = roll("d4")
             if encounter_roll == 1:
-                monster = get_weak_monster(roll("d4") - 1)
+                monster = roll_on_table(WEAK_MONSTERS, "d4")
                 self.state.combat = CombatState(monster=monster, monster_hp=monster.hp)
                 self.state.phase = Phase.COMBAT
                 return ActionResult(
@@ -282,7 +281,7 @@ class GameEngine:
                 if isinstance(item, Scroll):
                     from dark_fort.game.tables import SCROLLS_TABLE
 
-                    scroll_name, scroll_type, _ = SCROLLS_TABLE[roll("d4") - 1]
+                    scroll_name, scroll_type, _ = roll_on_table(SCROLLS_TABLE, "d4")
                     self.state.player.inventory.append(
                         Scroll(name=scroll_name, scroll_type=scroll_type)
                     )
